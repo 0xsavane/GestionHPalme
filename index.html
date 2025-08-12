@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PalmManager - Gestion Huile de Palme</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0;
+            padding: 0;
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f3f4f6;
+            overscroll-behavior: contain;
+        }
+        
+        /* Header */
+        .header {
+            background: #10b981;
+            color: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* Tabs */
+        .tabs {
+            background: white;
+            display: flex;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+        }
+        
+        /* Main content */
+        .content {
+            padding: 16px;
+            min-height: calc(100vh - 140px);
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        
+        .card h2 {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+        
+        /* Stats cards */
+        .stat-card {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .stat-card.red {
+            background: #fef2f2;
+        }
+        .stat-card.green {
+            background: #f0fdf4;
+        }
+        .stat-card.blue {
+            background: #eff6ff;
+        }
+        .stat-card.orange {
+            background: #fff7ed;
+        }
+        .stat-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .text-red { color: #dc2626; }
+        .text-green { color: #16a34a; }
+        .text-blue { color: #2563eb; }
+        .text-orange { color: #ea580c; }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        /* Line items */
+        .line-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #f9fafb;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .line-item input {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .line-item input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+        .line-item .desc {
+            flex: 1;
+        }
+        .line-item .amount {
+            width: 120px;
+        }
+        .btn-remove {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 18px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #10b981;
+            color: white;
+            width: 100%;
+            padding: 12px;
+        }
+        .btn-primary:hover {
+            background: #059669;
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            width: 100%;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        /* Transaction item */
+        .transaction-item {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+        }
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        .transaction-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .type-depense {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .type-revenu {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+        .transaction-date {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .transaction-lines {
+            margin: 12px 0;
+            padding: 12px 0;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .transaction-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .transaction-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+        .transaction-note {
+            font-size: 13px;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 8px;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        /* Install prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .install-prompt h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .install-prompt p {
+            font-size: 13px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+        .install-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Total preview */
+        .total-preview {
+            background: #f0fdf4;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .total-preview-label {
+            font-size: 13px;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .total-preview-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+        
+        /* Hide elements */
+        .hidden {
+            display: none;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🌴 PalmManager</h1>
+        <p>Gestion Huile de Palme</p>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('dashboard')">📊 Tableau</button>
+        <button class="tab" onclick="showTab('depense')">💸 Dépenses</button>
+        <button class="tab" onclick="showTab('revenu')">💰 Revenus</button>
+        <button class="tab" onclick="showTab('historique')">📜 Historique</button>
+    </div>
+    
+    <!-- Content -->
+    <div class="content">
+        <!-- Dashboard -->
+        <div id="dashboard" class="tab-content">
+            <div class="card">
+                <h2>📈 Vue d'ensemble</h2>
+                
+                <div class="stat-card red">
+                    <div class="stat-label text-red">Total Dépenses</div>
+                    <div class="stat-value text-red" id="total-depenses">0 GNF</div>
+                </div>
+                
+                <div class="stat-card green">
+                    <div class="stat-label text-green">Total Revenus</div>
+                    <div class="stat-value text-green" id="total-revenus">0 GNF</div>
+                </div>
+                
+                <div class="stat-card blue" id="benefice-card">
+                    <div class="stat-label text-blue">Bénéfice Net</div>
+                    <div class="stat-value text-blue" id="total-benefice">0 GNF</div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 16px; background: #f9fafb; border-radius: 6px;">
+                    <p style="font-size: 14px; color: #6b7280;">
+                        📊 <span id="nb-transactions">0</span> transactions enregistrées
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dépenses -->
+        <div id="depense" class="tab-content hidden">
+            <div class="card">
+                <h2>➖ Nouvelle Dépense</h2>
+                
+                <form id="form-depense" onsubmit="enregistrerTransaction(event, 'depense')">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="date-depense" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Détails des dépenses</label>
+                        <div id="lignes-depense">
+                            <div class="line-item">
+                                <input type="text" class="desc" placeholder="Description" required>
+                                <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="ajouterLigne('depense')" style="margin-top: 8px;">
+                            ➕ Ajouter une ligne
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Note (optionnel)</label>
+                        <textarea class="form-input" id="note-depense" rows="2" placeholder="Informations supplémentaires..."></textarea>
+                    </div>
+                    
+                    <div class="total-preview">
+                        <div class="total-preview-label">Total à enregistrer:</div>
+                        <div class="total-preview-value" id="preview-depense">0 GNF</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Revenus -->
+        <div id="revenu" class="tab-content hidden">
+            <div class="card">
+                <h2>➕ Nouveau Revenu</h2>
+                
+                <form id="form-revenu" onsubmit="enregistrerTransaction(event, 'revenu')">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="date-revenu" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Détails des revenus</label>
+                        <div id="lignes-revenu">
+                            <div class="line-item">
+                                <input type="text" class="desc" placeholder="Description" required>
+                                <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="ajouterLigne('revenu')" style="margin-top: 8px;">
+                            ➕ Ajouter une ligne
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Note (optionnel)</label>
+                        <textarea class="form-input" id="note-revenu" rows="2" placeholder="Informations supplémentaires..."></textarea>
+                    </div>
+                    
+                    <div class="total-preview">
+                        <div class="total-preview-label">Total à enregistrer:</div>
+                        <div class="total-preview-value" id="preview-revenu">0 GNF</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Historique -->
+        <div id="historique" class="tab-content hidden">
+            <h2 style="font-size: 18px; color: #374151; margin-bottom: 16px;">
+                📜 Historique des transactions
+            </h2>
+            <div id="liste-transactions">
+                <div class="empty-state">
+                    <p>Aucune transaction enregistrée</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Install Prompt -->
+    <div id="install-prompt" class="install-prompt hidden">
+        <h3>📱 Installer l'application</h3>
+        <p>Accédez à PalmManager directement depuis votre écran d'accueil!</p>
+        <div class="install-buttons">
+            <button class="btn" style="background: white; color: #10b981; flex: 1;" onclick="installerApp()">
+                Installer
+            </button>
+            <button class="btn" style="background: #059669; color: white; padding: 10px 20px;" onclick="cacherInstallPrompt()">
+                Plus tard
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // [HOOK_MODULE_2] - Point d'extension pour gestion stocks
+        // [HOOK_MODULE_3] - Point d'extension pour graphiques  
+        // [HOOK_MODULE_4] - Point d'extension pour export PDF
+        // [HOOK_MODULE_5] - Point d'extension pour calculateurs
+        
+        // État global
+        let transactions = [];
+        let deferredPrompt;
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Charger les données
+            chargerDonnees();
+            
+            // Initialiser les dates à aujourd'hui
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-depense').value = today;
+            document.getElementById('date-revenu').value = today;
+            
+            // Écouter les changements dans les formulaires pour preview
+            document.getElementById('lignes-depense').addEventListener('input', () => updatePreview('depense'));
+            document.getElementById('lignes-revenu').addEventListener('input', () => updatePreview('revenu'));
+            
+            // PWA install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('install-prompt').classList.remove('hidden');
+            });
+            
+            // Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(() => {
+                    // Fallback inline service worker
+                    const sw = `
+                        self.addEventListener('install', e => self.skipWaiting());
+                        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                        self.addEventListener('fetch', e => {
+                            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+                        });
+                    `;
+                    const blob = new Blob([sw], { type: 'application/javascript' });
+                    const swUrl = URL.createObjectURL(blob);
+                    navigator.serviceWorker.register(swUrl);
+                });
+            }
+        });
+        
+        // Gestion des tabs
+        function showTab(tabName) {
+            // Masquer tous les contenus
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Désactiver tous les tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Afficher le contenu sélectionné
+            document.getElementById(tabName).classList.remove('hidden');
+            document.getElementById(tabName).classList.add('fade-in');
+            
+            // Activer le tab
+            event.target.classList.add('active');
+            
+            // Mettre à jour le dashboard si nécessaire
+            if (tabName === 'dashboard') {
+                updateDashboard();
+            }
+        }
+        
+        // Ajouter une ligne au formulaire
+        function ajouterLigne(type) {
+            const container = document.getElementById(`lignes-${type}`);
+            const newLine = document.createElement('div');
+            newLine.className = 'line-item';
+            newLine.innerHTML = `
+                <input type="text" class="desc" placeholder="Description" required>
+                <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove(); updatePreview('${type}')">❌</button>
+            `;
+            container.appendChild(newLine);
+        }
+        
+        // Mettre à jour la preview du total
+        function updatePreview(type) {
+            const lines = document.querySelectorAll(`#lignes-${type} .line-item`);
+            let total = 0;
+            
+            lines.forEach(line => {
+                const amount = parseFloat(line.querySelector('.amount').value) || 0;
+                total += amount;
+            });
+            
+            document.getElementById(`preview-${type}`).textContent = formatMontant(total);
+        }
+        
+        // Enregistrer une transaction
+        function enregistrerTransaction(event, type) {
+            event.preventDefault();
+            
+            const date = document.getElementById(`date-${type}`).value;
+            const note = document.getElementById(`note-${type}`).value;
+            const lines = document.querySelectorAll(`#lignes-${type} .line-item`);
+            
+            const items = [];
+            let total = 0;
+            
+            lines.forEach(line => {
+                const nom = line.querySelector('.desc').value;
+                const montant = parseFloat(line.querySelector('.amount').value);
+                if (nom && montant > 0) {
+                    items.push({ nom, montant });
+                    total += montant;
+                }
+            });
+            
+            if (items.length === 0) {
+                alert('Veuillez remplir au moins une ligne correctement');
+                return;
+            }
+            
+            const transaction = {
+                id: Date.now(),
+                type,
+                date,
+                items,
+                total,
+                note,
+                timestamp: new Date().toISOString()
+            };
+            
+            transactions.unshift(transaction);
+            sauvegarderDonnees();
+            
+            // Réinitialiser le formulaire
+            event.target.reset();
+            document.getElementById(`date-${type}`).value = new Date().toISOString().split('T')[0];
+            
+            // Garder une seule ligne
+            const container = document.getElementById(`lignes-${type}`);
+            container.innerHTML = `
+                <div class="line-item">
+                    <input type="text" class="desc" placeholder="Description" required>
+                    <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
+                </div>
+            `;
+            
+            updatePreview(type);
+            
+            alert('Transaction enregistrée avec succès !');
+            showTab('dashboard');
+            updateDashboard();
+            updateHistorique();
+        }
+        
+        // Supprimer une transaction
+        function supprimerTransaction(id) {
+            if (confirm('Voulez-vous vraiment supprimer cette transaction ?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                sauvegarderDonnees();
+                updateDashboard();
+                updateHistorique();
+            }
+        }
+        
+        // Mettre à jour le dashboard
+        function updateDashboard() {
+            const depenses = transactions
+                .filter(t => t.type === 'depense')
+                .reduce((sum, t) => sum + t.total, 0);
+            
+            const revenus = transactions
+                .filter(t => t.type === 'revenu')
+                .reduce((sum, t) => sum + t.total, 0);
+            
+            const benefice = revenus - depenses;
+            
+            document.getElementById('total-depenses').textContent = formatMontant(depenses);
+            document.getElementById('total-revenus').textContent = formatMontant(revenus);
+            document.getElementById('total-benefice').textContent = formatMontant(benefice);
+            document.getElementById('nb-transactions').textContent = transactions.length;
+            
+            // Changer la couleur du bénéfice si négatif
+            const beneficeCard = document.getElementById('benefice-card');
+            const beneficeValue = document.getElementById('total-benefice');
+            
+            if (benefice < 0) {
+                beneficeCard.className = 'stat-card orange';
+                beneficeValue.className = 'stat-value text-orange';
+            } else {
+                beneficeCard.className = 'stat-card blue';
+                beneficeValue.className = 'stat-value text-blue';
+            }
+        }
+        
+        // Mettre à jour l'historique
+        function updateHistorique() {
+            const container = document.getElementById('liste-transactions');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Aucune transaction enregistrée</p></div>';
+                return;
+            }
+            
+            container.innerHTML = transactions.map(t => `
+                <div class="transaction-item">
+                    <div class="transaction-header">
+                        <div>
+                            <span class="transaction-type ${t.type === 'depense' ? 'type-depense' : 'type-revenu'}">
+                                ${t.type === 'depense' ? 'DÉPENSE' : 'REVENU'}
+                            </span>
+                            <div class="transaction-date">
+                                ${new Date(t.date).toLocaleDateString('fr-FR')}
+                            </div>
+                        </div>
+                        <button class="btn-remove" onclick="supprimerTransaction(${t.id})">🗑️</button>
+                    </div>
+                    
+                    <div class="transaction-lines">
+                        ${t.items.map(item => `
+                            <div class="transaction-line">
+                                <span>${item.nom}</span>
+                                <span>${formatMontant(item.montant)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="transaction-total">
+                        <span>Total</span>
+                        <span class="${t.type === 'depense' ? 'text-red' : 'text-green'}">
+                            ${formatMontant(t.total)}
+                        </span>
+                    </div>
+                    
+                    ${t.note ? `<div class="transaction-note">📝 ${t.note}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // Formater les montants
+        function formatMontant(montant) {
+            return new Intl.NumberFormat('fr-GN', {
+                style: 'currency',
+                currency: 'GNF',
+                minimumFractionDigits: 0
+            }).format(montant);
+        }
+        
+        // Sauvegarder les données
+        function sauvegarderDonnees() {
+            const data = {
+                version: '1.0',
+                transactions,
+                lastUpdate: new Date().toISOString()
+            };
+            localStorage.setItem('palmManagerData', JSON.stringify(data));
+        }
+        
+        // Charger les données
+        function chargerDonnees() {
+            const saved = localStorage.getItem('palmManagerData');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    transactions = data.transactions || [];
+                    updateDashboard();
+                    updateHistorique();
+                } catch (e) {
+                    console.error('Erreur chargement données:', e);
+                }
+            }
+        }
+        
+        // PWA functions
+        function installerApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App installée');
+                    }
+                    deferredPrompt = null;
+                    cacherInstallPrompt();
+                });
+            }
+        }
+        
+        function cacherInstallPrompt() {
+            document.getElementById('install-prompt').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
