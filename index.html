@@ -3,119 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PalmManager - Gestion Huile de Palme</title>
+    <title>PalmManager v2 - Gestion Avancée</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     
     <style>
         * { 
             box-sizing: border-box; 
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f3f4f6;
             overscroll-behavior: contain;
         }
         
         /* Header */
         .header {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-            padding: 16px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .header h1 {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             margin-bottom: 4px;
         }
         .header p {
             font-size: 14px;
-            opacity: 0.9;
+            opacity: 0.95;
         }
         
-        /* Tabs */
-        .tabs {
+        /* Tabs - Scrollable pour plus d'onglets */
+        .tabs-container {
             background: white;
-            display: flex;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 10;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tabs {
+            display: flex;
+            min-width: max-content;
         }
         .tab {
-            flex: 1;
-            padding: 12px;
+            flex: 0 0 auto;
+            padding: 14px 16px;
             text-align: center;
             cursor: pointer;
             border: none;
             background: none;
-            font-size: 14px;
+            font-size: 13px;
             color: #666;
             transition: all 0.3s;
             border-bottom: 3px solid transparent;
+            font-weight: 500;
+            white-space: nowrap;
         }
         .tab.active {
             color: #10b981;
             border-bottom-color: #10b981;
         }
         
-        /* Main content */
+        /* Content */
         .content {
             padding: 16px;
             min-height: calc(100vh - 140px);
+            padding-bottom: 80px;
         }
         
         /* Cards */
         .card {
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             margin-bottom: 16px;
         }
         
         .card h2 {
             font-size: 18px;
-            color: #374151;
+            color: #1f2937;
             margin-bottom: 16px;
+            font-weight: 600;
         }
         
         /* Stats cards */
         .stat-card {
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 12px;
+            border: 1px solid;
         }
         .stat-card.red {
-            background: #fef2f2;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #fecaca;
         }
         .stat-card.green {
-            background: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #bbf7d0;
         }
         .stat-card.blue {
-            background: #eff6ff;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-color: #bfdbfe;
         }
         .stat-card.orange {
-            background: #fff7ed;
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border-color: #fdba74;
+        }
+        .stat-card.purple {
+            background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
+            border-color: #d8b4fe;
         }
         .stat-label {
             font-size: 12px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .stat-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
         }
         .text-red { color: #dc2626; }
         .text-green { color: #16a34a; }
         .text-blue { color: #2563eb; }
         .text-orange { color: #ea580c; }
+        .text-purple { color: #9333ea; }
+        
+        /* Stock Grid */
+        .stock-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stock-item {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        .stock-item h3 {
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .stock-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .stock-unit {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
         
         /* Forms */
         .form-group {
@@ -123,22 +176,118 @@
         }
         .form-label {
             display: block;
-            font-size: 14px;
+            font-size: 13px;
             color: #374151;
-            margin-bottom: 4px;
-            font-weight: 500;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
-        .form-input {
+        .form-input, .form-select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: white;
         }
-        .form-input:focus {
+        .form-input:focus, .form-select:focus {
             outline: none;
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        /* Search Box */
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+        
+        /* Contact Card */
+        .contact-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .contact-info h4 {
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .contact-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .type-client {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .type-fournisseur {
+            background: #fce7f3;
+            color: #a21caf;
+        }
+        .contact-details {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .contact-stats {
+            text-align: right;
+        }
+        .contact-total {
+            font-size: 14px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .contact-count {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        
+        /* Categories */
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .category-tag {
+            padding: 6px 12px;
+            background: #f3f4f6;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .category-tag.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
         }
         
         /* Line items */
@@ -147,22 +296,22 @@
             gap: 8px;
             align-items: center;
             background: #f9fafb;
-            padding: 8px;
-            border-radius: 6px;
+            padding: 10px;
+            border-radius: 8px;
             margin-bottom: 8px;
+            border: 1px solid #e5e7eb;
         }
-        .line-item input {
-            padding: 8px;
+        .line-item input, .line-item select {
+            padding: 10px;
             border: 1px solid #d1d5db;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
-        }
-        .line-item input:focus {
-            outline: none;
-            border-color: #10b981;
         }
         .line-item .desc {
             flex: 1;
+        }
+        .line-item .category {
+            width: 140px;
         }
         .line-item .amount {
             width: 120px;
@@ -172,45 +321,71 @@
             border: none;
             color: #dc2626;
             cursor: pointer;
-            padding: 4px;
-            font-size: 18px;
+            padding: 6px;
+            font-size: 20px;
         }
         
         /* Buttons */
         .btn {
-            padding: 10px 16px;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .btn:active {
+            transform: scale(0.98);
         }
         .btn-primary {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             width: 100%;
-            padding: 12px;
-        }
-        .btn-primary:hover {
-            background: #059669;
+            padding: 14px;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
         }
         .btn-secondary {
             background: #f3f4f6;
             color: #374151;
             width: 100%;
+            border: 2px solid #e5e7eb;
         }
-        .btn-secondary:hover {
-            background: #e5e7eb;
+        
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        .quick-stat {
+            text-align: center;
+        }
+        .quick-stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .quick-stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
         }
         
         /* Transaction item */
         .transaction-item {
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             margin-bottom: 12px;
+            border: 1px solid #f3f4f6;
         }
         .transaction-header {
             display: flex;
@@ -220,105 +395,97 @@
         }
         .transaction-type {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .type-depense {
-            background: #fef2f2;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
             color: #dc2626;
         }
         .type-revenu {
-            background: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
             color: #16a34a;
         }
-        .transaction-date {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
+        .type-stock {
+            background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
+            color: #9333ea;
         }
-        .transaction-lines {
-            margin: 12px 0;
-            padding: 12px 0;
-            border-top: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .transaction-line {
+        
+        /* Filters */
+        .filter-bar {
             display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 4px;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
         }
-        .transaction-total {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 8px;
-        }
-        .transaction-note {
+        .filter-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
             font-size: 13px;
-            color: #6b7280;
-            font-style: italic;
-            margin-top: 8px;
+            color: #374151;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
         }
         
         /* Empty state */
         .empty-state {
             text-align: center;
-            padding: 40px;
-            color: #6b7280;
+            padding: 60px 20px;
+            color: #9ca3af;
         }
-        
-        /* Install prompt */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .install-prompt h3 {
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-        .install-prompt p {
-            font-size: 13px;
+        .empty-state-icon {
+            font-size: 48px;
             margin-bottom: 12px;
-            opacity: 0.9;
-        }
-        .install-buttons {
-            display: flex;
-            gap: 8px;
+            opacity: 0.5;
         }
         
-        /* Total preview */
-        .total-preview {
-            background: #f0fdf4;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 16px;
+        /* Success message */
+        .success-msg {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 1000;
+            font-weight: 500;
+            display: none;
         }
-        .total-preview-label {
-            font-size: 13px;
-            color: #374151;
-            margin-bottom: 4px;
+        .success-msg.show {
+            display: block;
+            animation: slideDown 0.3s ease;
         }
-        .total-preview-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #16a34a;
+        
+        @keyframes slideDown {
+            from { 
+                opacity: 0; 
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0);
+            }
         }
         
         /* Hide elements */
         .hidden {
-            display: none;
+            display: none !important;
         }
         
         /* Animation */
@@ -334,23 +501,32 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>🌴 PalmManager</h1>
-        <p>Gestion Huile de Palme</p>
+        <h1>🌴 PalmManager Pro</h1>
+        <p>Gestion Complète - v2.0</p>
     </div>
     
     <!-- Tabs -->
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('dashboard')">📊 Tableau</button>
-        <button class="tab" onclick="showTab('depense')">💸 Dépenses</button>
-        <button class="tab" onclick="showTab('revenu')">💰 Revenus</button>
-        <button class="tab" onclick="showTab('historique')">📜 Historique</button>
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('dashboard', this)">📊 Tableau</button>
+            <button class="tab" onclick="showTab('stocks', this)">📦 Stocks</button>
+            <button class="tab" onclick="showTab('depense', this)">💸 Dépenses</button>
+            <button class="tab" onclick="showTab('revenu', this)">💰 Revenus</button>
+            <button class="tab" onclick="showTab('contacts', this)">👥 Contacts</button>
+            <button class="tab" onclick="showTab('historique', this)">📜 Historique</button>
+        </div>
+    </div>
+    
+    <!-- Success Message -->
+    <div id="success-msg" class="success-msg">
+        ✅ Opération réussie !
     </div>
     
     <!-- Content -->
     <div class="content">
         <!-- Dashboard -->
         <div id="dashboard" class="tab-content">
-            <div class="card">
+            <div class="card fade-in">
                 <h2>📈 Vue d'ensemble</h2>
                 
                 <div class="stat-card red">
@@ -368,17 +544,100 @@
                     <div class="stat-value text-blue" id="total-benefice">0 GNF</div>
                 </div>
                 
-                <div style="margin-top: 20px; padding: 16px; background: #f9fafb; border-radius: 6px;">
-                    <p style="font-size: 14px; color: #6b7280;">
-                        📊 <span id="nb-transactions">0</span> transactions enregistrées
-                    </p>
+                <div class="stat-card purple">
+                    <div class="stat-label text-purple">Valeur Stock Total</div>
+                    <div class="stat-value text-purple" id="valeur-stock">0 GNF</div>
                 </div>
+                
+                <div class="quick-stats">
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="nb-transactions">0</div>
+                        <div class="quick-stat-label">Transactions</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="nb-contacts">0</div>
+                        <div class="quick-stat-label">Contacts</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="stock-palme">0</div>
+                        <div class="quick-stat-label">Stock H. Palme (L)</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="stock-palmiste">0</div>
+                        <div class="quick-stat-label">Stock Palmiste (L)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stocks -->
+        <div id="stocks" class="tab-content hidden">
+            <div class="card fade-in">
+                <h2>📦 Gestion des Stocks</h2>
+                
+                <div class="stock-grid">
+                    <div class="stock-item">
+                        <h3>🌴 Huile de Palme</h3>
+                        <div class="stock-value" id="stock-palme-detail">0</div>
+                        <div class="stock-unit">Litres disponibles</div>
+                    </div>
+                    <div class="stock-item">
+                        <h3>🥥 Huile Palmiste</h3>
+                        <div class="stock-value" id="stock-palmiste-detail">0</div>
+                        <div class="stock-unit">Litres disponibles</div>
+                    </div>
+                </div>
+                
+                <form id="form-stock" onsubmit="enregistrerStock(event)">
+                    <div class="form-group">
+                        <label class="form-label">Type d'opération</label>
+                        <select class="form-select" id="stock-operation" required onchange="updateStockForm()">
+                            <option value="">Sélectionner...</option>
+                            <option value="production">🏭 Production</option>
+                            <option value="vente">💰 Vente</option>
+                            <option value="ajustement">📝 Ajustement</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Type d'huile</label>
+                        <select class="form-select" id="stock-type" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="palme">Huile de Palme</option>
+                            <option value="palmiste">Huile Palmiste</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Quantité (Litres)</label>
+                        <input type="number" class="form-input" id="stock-quantite" min="0" step="0.5" required>
+                    </div>
+                    
+                    <div class="form-group" id="stock-prix-group" style="display:none;">
+                        <label class="form-label">Prix unitaire (GNF/Litre)</label>
+                        <input type="number" class="form-input" id="stock-prix" min="0" step="100">
+                    </div>
+                    
+                    <div class="form-group" id="stock-contact-group" style="display:none;">
+                        <label class="form-label">Client</label>
+                        <select class="form-select" id="stock-contact">
+                            <option value="">Sélectionner un client...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Note</label>
+                        <textarea class="form-input" id="stock-note" rows="2" placeholder="Détails de l'opération..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">💾 Enregistrer l'opération</button>
+                </form>
             </div>
         </div>
         
         <!-- Dépenses -->
         <div id="depense" class="tab-content hidden">
-            <div class="card">
+            <div class="card fade-in">
                 <h2>➖ Nouvelle Dépense</h2>
                 
                 <form id="form-depense" onsubmit="enregistrerTransaction(event, 'depense')">
@@ -388,11 +647,26 @@
                     </div>
                     
                     <div class="form-group">
+                        <label class="form-label">Fournisseur (optionnel)</label>
+                        <select class="form-select" id="fournisseur-depense">
+                            <option value="">Aucun</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                         <label class="form-label">Détails des dépenses</label>
                         <div id="lignes-depense">
                             <div class="line-item">
                                 <input type="text" class="desc" placeholder="Description" required>
-                                <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
+                                <select class="category">
+                                    <option value="">Catégorie</option>
+                                    <option value="matiere">Matière première</option>
+                                    <option value="transport">Transport</option>
+                                    <option value="main">Main d'œuvre</option>
+                                    <option value="equipement">Équipement</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                                <input type="number" class="amount" placeholder="Montant" min="0" step="100" required>
                             </div>
                         </div>
                         <button type="button" class="btn btn-secondary" onclick="ajouterLigne('depense')" style="margin-top: 8px;">
@@ -410,14 +684,14 @@
                         <div class="total-preview-value" id="preview-depense">0 GNF</div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                    <button type="submit" class="btn btn-primary">💾 Enregistrer la dépense</button>
                 </form>
             </div>
         </div>
         
         <!-- Revenus -->
         <div id="revenu" class="tab-content hidden">
-            <div class="card">
+            <div class="card fade-in">
                 <h2>➕ Nouveau Revenu</h2>
                 
                 <form id="form-revenu" onsubmit="enregistrerTransaction(event, 'revenu')">
@@ -427,11 +701,25 @@
                     </div>
                     
                     <div class="form-group">
+                        <label class="form-label">Client (optionnel)</label>
+                        <select class="form-select" id="client-revenu">
+                            <option value="">Aucun</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                         <label class="form-label">Détails des revenus</label>
                         <div id="lignes-revenu">
                             <div class="line-item">
                                 <input type="text" class="desc" placeholder="Description" required>
-                                <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
+                                <select class="category">
+                                    <option value="">Catégorie</option>
+                                    <option value="palme">Huile Palme</option>
+                                    <option value="palmiste">Huile Palmiste</option>
+                                    <option value="service">Service</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                                <input type="number" class="amount" placeholder="Montant" min="0" step="100" required>
                             </div>
                         </div>
                         <button type="button" class="btn btn-secondary" onclick="ajouterLigne('revenu')" style="margin-top: 8px;">
@@ -449,126 +737,663 @@
                         <div class="total-preview-value" id="preview-revenu">0 GNF</div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+                    <button type="submit" class="btn btn-primary">💾 Enregistrer le revenu</button>
                 </form>
+            </div>
+        </div>
+        
+        <!-- Contacts -->
+        <div id="contacts" class="tab-content hidden">
+            <div class="card fade-in">
+                <h2>👥 Gestion des Contacts</h2>
+                
+                <button class="btn btn-secondary" onclick="toggleContactForm()" style="margin-bottom: 16px;">
+                    ➕ Ajouter un contact
+                </button>
+                
+                <div id="contact-form" class="hidden" style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <form onsubmit="ajouterContact(event)">
+                        <div class="form-group">
+                            <label class="form-label">Nom</label>
+                            <input type="text" class="form-input" id="contact-nom" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" id="contact-type" required>
+                                <option value="client">Client</option>
+                                <option value="fournisseur">Fournisseur</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Téléphone</label>
+                            <input type="tel" class="form-input" id="contact-tel">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Adresse</label>
+                            <input type="text" class="form-input" id="contact-adresse">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </form>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="Rechercher un contact..." onkeyup="rechercherContacts(this.value)">
+                    <span class="search-icon">🔍</span>
+                </div>
+                
+                <div id="liste-contacts">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <p>Aucun contact enregistré</p>
+                    </div>
+                </div>
             </div>
         </div>
         
         <!-- Historique -->
         <div id="historique" class="tab-content hidden">
-            <h2 style="font-size: 18px; color: #374151; margin-bottom: 16px;">
-                📜 Historique des transactions
+            <h2 style="font-size: 18px; color: #1f2937; margin-bottom: 16px; font-weight: 600;">
+                📜 Historique complet
             </h2>
+            
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="Rechercher dans l'historique..." onkeyup="rechercherTransactions(this.value)">
+                <span class="search-icon">🔍</span>
+            </div>
+            
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filtrerTransactions('tout', this)">Tout</button>
+                <button class="filter-btn" onclick="filtrerTransactions('depense', this)">Dépenses</button>
+                <button class="filter-btn" onclick="filtrerTransactions('revenu', this)">Revenus</button>
+                <button class="filter-btn" onclick="filtrerTransactions('stock', this)">Stocks</button>
+                <button class="filter-btn" onclick="filtrerTransactions('semaine', this)">Cette semaine</button>
+                <button class="filter-btn" onclick="filtrerTransactions('mois', this)">Ce mois</button>
+            </div>
+            
             <div id="liste-transactions">
                 <div class="empty-state">
-                    <p>Aucune transaction enregistrée</p>
+                    <div class="empty-state-icon">📭</div>
+                    <p>Aucune transaction</p>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Install Prompt -->
-    <div id="install-prompt" class="install-prompt hidden">
-        <h3>📱 Installer l'application</h3>
-        <p>Accédez à PalmManager directement depuis votre écran d'accueil!</p>
-        <div class="install-buttons">
-            <button class="btn" style="background: white; color: #10b981; flex: 1;" onclick="installerApp()">
-                Installer
-            </button>
-            <button class="btn" style="background: #059669; color: white; padding: 10px 20px;" onclick="cacherInstallPrompt()">
-                Plus tard
-            </button>
-        </div>
-    </div>
+    <!-- Total preview (shared styling) -->
+    <style>
+        .total-preview {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #bbf7d0;
+        }
+        .total-preview-label {
+            font-size: 12px;
+            color: #374151;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .total-preview-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+    </style>
     
     <script>
-        // [HOOK_MODULE_2] - Point d'extension pour gestion stocks
-        // [HOOK_MODULE_3] - Point d'extension pour graphiques  
-        // [HOOK_MODULE_4] - Point d'extension pour export PDF
-        // [HOOK_MODULE_5] - Point d'extension pour calculateurs
+        console.log('PalmManager v2 - Chargement du script...');
+        
+        // Configuration
+        const APP_CONFIG = {
+            version: '2.0',
+            currency: 'GNF',
+            storageKey: 'palmManagerDataV2'
+        };
         
         // État global
         let transactions = [];
-        let deferredPrompt;
+        let contacts = [];
+        let stocks = {
+            palme: 0,
+            palmiste: 0
+        };
+        let categories = {
+            depense: ['matiere', 'transport', 'main', 'equipement', 'autre'],
+            revenu: ['palme', 'palmiste', 'service', 'autre']
+        };
         
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
-            // Charger les données
-            chargerDonnees();
-            
-            // Initialiser les dates à aujourd'hui
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date-depense').value = today;
-            document.getElementById('date-revenu').value = today;
-            
-            // Écouter les changements dans les formulaires pour preview
-            document.getElementById('lignes-depense').addEventListener('input', () => updatePreview('depense'));
-            document.getElementById('lignes-revenu').addEventListener('input', () => updatePreview('revenu'));
-            
-            // PWA install prompt
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                document.getElementById('install-prompt').classList.remove('hidden');
-            });
-            
-            // Service Worker
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(() => {
-                    // Fallback inline service worker
-                    const sw = `
-                        self.addEventListener('install', e => self.skipWaiting());
-                        self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-                        self.addEventListener('fetch', e => {
-                            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-                        });
-                    `;
-                    const blob = new Blob([sw], { type: 'application/javascript' });
-                    const swUrl = URL.createObjectURL(blob);
-                    navigator.serviceWorker.register(swUrl);
-                });
-            }
+            initApp();
         });
         
+        function initApp() {
+            try {
+                // Charger les données
+                chargerDonnees();
+                
+                // Initialiser les dates
+                const today = new Date().toISOString().split('T')[0];
+                const dateDepense = document.getElementById('date-depense');
+                const dateRevenu = document.getElementById('date-revenu');
+                if (dateDepense) dateDepense.value = today;
+                if (dateRevenu) dateRevenu.value = today;
+                
+                // Listeners pour preview
+                const lignesDepense = document.getElementById('lignes-depense');
+                const lignesRevenu = document.getElementById('lignes-revenu');
+                if (lignesDepense) lignesDepense.addEventListener('input', () => updatePreview('depense'));
+                if (lignesRevenu) lignesRevenu.addEventListener('input', () => updatePreview('revenu'));
+                
+                // Mettre à jour l'interface
+                updateContactSelects();
+                updateDashboard();
+                updateHistorique();
+                
+                console.log('App initialisée avec succès');
+            } catch (error) {
+                console.error('Erreur initialisation:', error);
+            }
+        }
+        
         // Gestion des tabs
-        function showTab(tabName) {
-            // Masquer tous les contenus
+        function showTab(tabName, tabElement) {
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
             });
             
-            // Désactiver tous les tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Afficher le contenu sélectionné
-            document.getElementById(tabName).classList.remove('hidden');
-            document.getElementById(tabName).classList.add('fade-in');
+            const content = document.getElementById(tabName);
+            content.classList.remove('hidden');
+            content.classList.add('fade-in');
             
-            // Activer le tab
-            event.target.classList.add('active');
+            tabElement.classList.add('active');
             
-            // Mettre à jour le dashboard si nécessaire
-            if (tabName === 'dashboard') {
+            if (tabName === 'dashboard') updateDashboard();
+            if (tabName === 'stocks') updateStocksDisplay();
+            if (tabName === 'contacts') updateContactsList();
+            if (tabName === 'historique') updateHistorique();
+        }
+        
+        // STOCKS
+        function updateStockForm() {
+            const operation = document.getElementById('stock-operation').value;
+            document.getElementById('stock-prix-group').style.display = operation === 'vente' ? 'block' : 'none';
+            document.getElementById('stock-contact-group').style.display = operation === 'vente' ? 'block' : 'none';
+        }
+        
+        function enregistrerStock(event) {
+            event.preventDefault();
+            
+            try {
+                const operation = document.getElementById('stock-operation').value;
+                const type = document.getElementById('stock-type').value;
+                const quantite = parseFloat(document.getElementById('stock-quantite').value);
+                const prix = parseFloat(document.getElementById('stock-prix').value) || 0;
+                const contactId = document.getElementById('stock-contact').value;
+                const note = document.getElementById('stock-note').value;
+                
+                // Vérifications
+                if (!operation || !type || !quantite) {
+                    alert('⚠️ Veuillez remplir tous les champs obligatoires');
+                    return;
+                }
+                
+                // Mise à jour du stock
+                if (operation === 'production' || operation === 'ajustement') {
+                    stocks[type] = (stocks[type] || 0) + quantite;
+                } else if (operation === 'vente') {
+                    if ((stocks[type] || 0) < quantite) {
+                        alert('⚠️ Stock insuffisant !');
+                        return;
+                    }
+                    stocks[type] = (stocks[type] || 0) - quantite;
+                    
+                    // Créer aussi une transaction revenu
+                    if (prix > 0) {
+                        const transaction = {
+                            id: Date.now(),
+                            type: 'revenu',
+                            date: new Date().toISOString().split('T')[0],
+                            items: [{
+                                nom: `Vente ${type === 'palme' ? 'Huile de Palme' : 'Huile Palmiste'} (${quantite}L)`,
+                                montant: prix * quantite,
+                                categorie: type
+                            }],
+                            total: prix * quantite,
+                            contactId: contactId,
+                            note: note,
+                            timestamp: new Date().toISOString()
+                        };
+                        transactions.unshift(transaction);
+                    }
+                }
+                
+                // Enregistrer l'opération stock
+                const stockOp = {
+                    id: Date.now() + 1,
+                    type: 'stock',
+                    operation,
+                    produit: type,
+                    quantite,
+                    prix,
+                    total: prix * quantite,
+                    contactId,
+                    note,
+                    date: new Date().toISOString().split('T')[0],
+                    timestamp: new Date().toISOString()
+                };
+                transactions.unshift(stockOp);
+                
+                sauvegarderDonnees();
+                document.getElementById('form-stock').reset();
+                showMessage(`✅ Stock ${operation === 'vente' ? 'vendu' : 'mis à jour'} !`);
+                updateStocksDisplay();
                 updateDashboard();
+                
+                console.log('Stock enregistré:', stockOp);
+            } catch (error) {
+                console.error('Erreur enregistrement stock:', error);
+                alert('❌ Erreur lors de l\'enregistrement');
             }
         }
         
-        // Ajouter une ligne au formulaire
+        function updateStocksDisplay() {
+            try {
+                const stockPalmeEl = document.getElementById('stock-palme-detail');
+                const stockPalmisteEl = document.getElementById('stock-palmiste-detail');
+                
+                if (stockPalmeEl) stockPalmeEl.textContent = (stocks.palme || 0).toFixed(1);
+                if (stockPalmisteEl) stockPalmisteEl.textContent = (stocks.palmiste || 0).toFixed(1);
+                
+                // Mettre à jour le select des clients
+                const select = document.getElementById('stock-contact');
+                if (select) {
+                    const clients = contacts.filter(c => c.type === 'client');
+                    select.innerHTML = '<option value="">Sélectionner un client...</option>' +
+                        clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Erreur updateStocksDisplay:', error);
+            }
+        }
+        
+        // CONTACTS
+        function toggleContactForm() {
+            const form = document.getElementById('contact-form');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('contact-nom').focus();
+            }
+        }
+        
+        function ajouterContact(event) {
+            event.preventDefault();
+            
+            try {
+                const contact = {
+                    id: Date.now(),
+                    nom: document.getElementById('contact-nom').value,
+                    type: document.getElementById('contact-type').value,
+                    tel: document.getElementById('contact-tel').value,
+                    adresse: document.getElementById('contact-adresse').value,
+                    totalTransactions: 0,
+                    nombreTransactions: 0
+                };
+                
+                if (!contact.nom || !contact.type) {
+                    alert('⚠️ Le nom et le type sont obligatoires');
+                    return;
+                }
+                
+                contacts.push(contact);
+                sauvegarderDonnees();
+                
+                event.target.reset();
+                toggleContactForm();
+                updateContactsList();
+                updateContactSelects();
+                showMessage('✅ Contact ajouté !');
+                
+                console.log('Contact ajouté:', contact);
+            } catch (error) {
+                console.error('Erreur ajout contact:', error);
+                alert('❌ Erreur lors de l\'ajout du contact');
+            }
+        }
+        
+        function updateContactsList() {
+            const container = document.getElementById('liste-contacts');
+            
+            if (contacts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <p>Aucun contact enregistré</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calculer les totaux par contact
+            contacts.forEach(contact => {
+                const contactTransactions = transactions.filter(t => t.contactId === String(contact.id));
+                contact.totalTransactions = contactTransactions.reduce((sum, t) => sum + (t.total || 0), 0);
+                contact.nombreTransactions = contactTransactions.length;
+            });
+            
+            container.innerHTML = contacts.map(c => `
+                <div class="contact-card">
+                    <div class="contact-info">
+                        <span class="contact-type ${c.type === 'client' ? 'type-client' : 'type-fournisseur'}">
+                            ${c.type === 'client' ? '👤 Client' : '🏭 Fournisseur'}
+                        </span>
+                        <h4>${c.nom}</h4>
+                        <div class="contact-details">
+                            ${c.tel ? `📞 ${c.tel}` : ''} ${c.adresse ? `📍 ${c.adresse}` : ''}
+                        </div>
+                    </div>
+                    <div class="contact-stats">
+                        <div class="contact-total">${formatMontant(c.totalTransactions)}</div>
+                        <div class="contact-count">${c.nombreTransactions} transaction(s)</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateContactSelects() {
+            try {
+                const clients = contacts.filter(c => c.type === 'client');
+                const fournisseurs = contacts.filter(c => c.type === 'fournisseur');
+                
+                const clientSelect = document.getElementById('client-revenu');
+                const fournisseurSelect = document.getElementById('fournisseur-depense');
+                
+                if (clientSelect) {
+                    clientSelect.innerHTML = 
+                        '<option value="">Aucun</option>' +
+                        clients.map(c => `<option value="${c.id}">${c.nom}</option>`).join('');
+                }
+                
+                if (fournisseurSelect) {
+                    fournisseurSelect.innerHTML = 
+                        '<option value="">Aucun</option>' +
+                        fournisseurs.map(f => `<option value="${f.id}">${f.nom}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Erreur updateContactSelects:', error);
+            }
+        }
+        
+        function rechercherContacts(query) {
+            const filtered = contacts.filter(c => 
+                c.nom.toLowerCase().includes(query.toLowerCase()) ||
+                (c.tel && c.tel.includes(query)) ||
+                (c.adresse && c.adresse.toLowerCase().includes(query.toLowerCase()))
+            );
+            
+            const container = document.getElementById('liste-contacts');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Aucun contact trouvé</p></div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(c => `
+                <div class="contact-card">
+                    <div class="contact-info">
+                        <span class="contact-type ${c.type === 'client' ? 'type-client' : 'type-fournisseur'}">
+                            ${c.type === 'client' ? '👤 Client' : '🏭 Fournisseur'}
+                        </span>
+                        <h4>${c.nom}</h4>
+                        <div class="contact-details">
+                            ${c.tel ? `📞 ${c.tel}` : ''} ${c.adresse ? `📍 ${c.adresse}` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // TRANSACTIONS AMÉLIORÉES
         function ajouterLigne(type) {
             const container = document.getElementById(`lignes-${type}`);
             const newLine = document.createElement('div');
             newLine.className = 'line-item';
+            
+            const categoriesOptions = type === 'depense' 
+                ? '<option value="">Catégorie</option><option value="matiere">Matière première</option><option value="transport">Transport</option><option value="main">Main d\'œuvre</option><option value="equipement">Équipement</option><option value="autre">Autre</option>'
+                : '<option value="">Catégorie</option><option value="palme">Huile Palme</option><option value="palmiste">Huile Palmiste</option><option value="service">Service</option><option value="autre">Autre</option>';
+            
             newLine.innerHTML = `
                 <input type="text" class="desc" placeholder="Description" required>
-                <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove(); updatePreview('${type}')">❌</button>
+                <select class="category">${categoriesOptions}</select>
+                <input type="number" class="amount" placeholder="Montant" min="0" step="100" required>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove(); updatePreview('${type}')">✖</button>
             `;
             container.appendChild(newLine);
+            newLine.querySelector('.desc').focus();
         }
         
-        // Mettre à jour la preview du total
+        function enregistrerTransaction(event, type) {
+            event.preventDefault();
+            
+            try {
+                const date = document.getElementById(`date-${type}`).value;
+                const note = document.getElementById(`note-${type}`).value;
+                const contactId = document.getElementById(type === 'depense' ? 'fournisseur-depense' : 'client-revenu').value;
+                const lines = document.querySelectorAll(`#lignes-${type} .line-item`);
+                
+                const items = [];
+                let total = 0;
+                
+                lines.forEach(line => {
+                    const nom = line.querySelector('.desc').value.trim();
+                    const montant = parseFloat(line.querySelector('.amount').value);
+                    const categorySelect = line.querySelector('.category');
+                    const categorie = categorySelect ? categorySelect.value : '';
+                    if (nom && montant > 0) {
+                        items.push({ nom, montant, categorie });
+                        total += montant;
+                    }
+                });
+                
+                if (items.length === 0) {
+                    alert('⚠️ Veuillez remplir au moins une ligne');
+                    return;
+                }
+                
+                const transaction = {
+                    id: Date.now(),
+                    type,
+                    date,
+                    items,
+                    total,
+                    contactId,
+                    note,
+                    timestamp: new Date().toISOString()
+                };
+                
+                transactions.unshift(transaction);
+                sauvegarderDonnees();
+                
+                // Réinitialiser le formulaire
+                event.target.reset();
+                document.getElementById(`date-${type}`).value = new Date().toISOString().split('T')[0];
+                
+                const container = document.getElementById(`lignes-${type}`);
+                const categoriesOptions = type === 'depense' 
+                    ? '<option value="">Catégorie</option><option value="matiere">Matière première</option><option value="transport">Transport</option><option value="main">Main d\'œuvre</option><option value="equipement">Équipement</option><option value="autre">Autre</option>'
+                    : '<option value="">Catégorie</option><option value="palme">Huile Palme</option><option value="palmiste">Huile Palmiste</option><option value="service">Service</option><option value="autre">Autre</option>';
+                
+                container.innerHTML = `
+                    <div class="line-item">
+                        <input type="text" class="desc" placeholder="Description" required>
+                        <select class="category">${categoriesOptions}</select>
+                        <input type="number" class="amount" placeholder="Montant" min="0" step="100" required>
+                    </div>
+                `;
+                
+                updatePreview(type);
+                showMessage('✅ Transaction enregistrée !');
+                
+                console.log('Transaction enregistrée:', transaction);
+                
+                // Retour au dashboard après un court délai
+                setTimeout(() => {
+                    const dashboardTab = document.querySelector('.tab');
+                    if (dashboardTab) {
+                        showTab('dashboard', dashboardTab);
+                    }
+                }, 500);
+                
+                updateDashboard();
+                updateHistorique();
+            } catch (error) {
+                console.error('Erreur enregistrement transaction:', error);
+                alert('❌ Erreur lors de l\'enregistrement');
+            }
+        }
+        
+        // RECHERCHE ET FILTRES
+        function rechercherTransactions(query) {
+            filtrerTransactions('recherche', null, query);
+        }
+        
+        function filtrerTransactions(filtre, btnElement, searchQuery = '') {
+            if (btnElement) {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+            
+            let filtered = [...transactions];
+            
+            if (searchQuery) {
+                filtered = filtered.filter(t => {
+                    const searchIn = [
+                        t.note || '',
+                        ...(t.items || []).map(i => i.nom),
+                        formatDate(t.date),
+                        t.operation || '',
+                        t.produit || ''
+                    ].join(' ').toLowerCase();
+                    return searchIn.includes(searchQuery.toLowerCase());
+                });
+            } else if (filtre === 'depense' || filtre === 'revenu' || filtre === 'stock') {
+                filtered = filtered.filter(t => t.type === filtre);
+            } else if (filtre === 'semaine') {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = filtered.filter(t => new Date(t.date) >= weekAgo);
+            } else if (filtre === 'mois') {
+                const monthAgo = new Date();
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                filtered = filtered.filter(t => new Date(t.date) >= monthAgo);
+            }
+            
+            afficherTransactions(filtered);
+        }
+        
+        function afficherTransactions(transactionsList) {
+            const container = document.getElementById('liste-transactions');
+            
+            if (!transactionsList || transactionsList.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Aucune transaction trouvée</p></div>';
+                return;
+            }
+            
+            container.innerHTML = transactionsList.map(t => {
+                if (t.type === 'stock') {
+                    return `
+                        <div class="transaction-item fade-in">
+                            <div class="transaction-header">
+                                <div>
+                                    <span class="transaction-type type-stock">
+                                        📦 Stock - ${t.operation || ''}
+                                    </span>
+                                    <div class="transaction-date">
+                                        📅 ${formatDate(t.date)}
+                                    </div>
+                                </div>
+                                <button class="btn-remove" onclick="supprimerTransaction(${t.id})">🗑️</button>
+                            </div>
+                            <div class="transaction-lines">
+                                <div class="transaction-line">
+                                    <span>• ${t.produit === 'palme' ? 'Huile de Palme' : 'Huile Palmiste'}</span>
+                                    <span>${t.quantite || 0} L</span>
+                                </div>
+                                ${t.prix ? `
+                                    <div class="transaction-line">
+                                        <span>• Prix unitaire</span>
+                                        <span>${formatMontant(t.prix)}/L</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            ${t.total ? `
+                                <div class="transaction-total">
+                                    <span>TOTAL</span>
+                                    <span class="text-green">${formatMontant(t.total)}</span>
+                                </div>
+                            ` : ''}
+                            ${t.note ? `<div class="transaction-note">📝 ${t.note}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    const contact = t.contactId ? contacts.find(c => c.id == t.contactId) : null;
+                    return `
+                        <div class="transaction-item fade-in">
+                            <div class="transaction-header">
+                                <div>
+                                    <span class="transaction-type ${t.type === 'depense' ? 'type-depense' : 'type-revenu'}">
+                                        ${t.type === 'depense' ? '💸 Dépense' : '💰 Revenu'}
+                                    </span>
+                                    ${contact ? `<div style="font-size: 12px; color: #6b7280; margin-top: 2px;">👤 ${contact.nom}</div>` : ''}
+                                    <div class="transaction-date">
+                                        📅 ${formatDate(t.date)}
+                                    </div>
+                                </div>
+                                <button class="btn-remove" onclick="supprimerTransaction(${t.id})">🗑️</button>
+                            </div>
+                            <div class="transaction-lines">
+                                ${(t.items || []).map(item => `
+                                    <div class="transaction-line">
+                                        <span>• ${item.nom} ${item.categorie ? `[${getCategoryLabel(item.categorie)}]` : ''}</span>
+                                        <span>${formatMontant(item.montant)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="transaction-total">
+                                <span>TOTAL</span>
+                                <span class="${t.type === 'depense' ? 'text-red' : 'text-green'}">
+                                    ${formatMontant(t.total || 0)}
+                                </span>
+                            </div>
+                            ${t.note ? `<div class="transaction-note">📝 ${t.note}</div>` : ''}
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+        
+        function getCategoryLabel(cat) {
+            const labels = {
+                matiere: 'Matière première',
+                transport: 'Transport',
+                main: 'Main d\'œuvre',
+                equipement: 'Équipement',
+                palme: 'H. Palme',
+                palmiste: 'H. Palmiste',
+                service: 'Service',
+                autre: 'Autre'
+            };
+            return labels[cat] || cat;
+        }
+        
+        // UTILITAIRES
         function updatePreview(type) {
             const lines = document.querySelectorAll(`#lignes-${type} .line-item`);
             let total = 0;
@@ -581,200 +1406,160 @@
             document.getElementById(`preview-${type}`).textContent = formatMontant(total);
         }
         
-        // Enregistrer une transaction
-        function enregistrerTransaction(event, type) {
-            event.preventDefault();
-            
-            const date = document.getElementById(`date-${type}`).value;
-            const note = document.getElementById(`note-${type}`).value;
-            const lines = document.querySelectorAll(`#lignes-${type} .line-item`);
-            
-            const items = [];
-            let total = 0;
-            
-            lines.forEach(line => {
-                const nom = line.querySelector('.desc').value;
-                const montant = parseFloat(line.querySelector('.amount').value);
-                if (nom && montant > 0) {
-                    items.push({ nom, montant });
-                    total += montant;
-                }
-            });
-            
-            if (items.length === 0) {
-                alert('Veuillez remplir au moins une ligne correctement');
-                return;
-            }
-            
-            const transaction = {
-                id: Date.now(),
-                type,
-                date,
-                items,
-                total,
-                note,
-                timestamp: new Date().toISOString()
-            };
-            
-            transactions.unshift(transaction);
-            sauvegarderDonnees();
-            
-            // Réinitialiser le formulaire
-            event.target.reset();
-            document.getElementById(`date-${type}`).value = new Date().toISOString().split('T')[0];
-            
-            // Garder une seule ligne
-            const container = document.getElementById(`lignes-${type}`);
-            container.innerHTML = `
-                <div class="line-item">
-                    <input type="text" class="desc" placeholder="Description" required>
-                    <input type="number" class="amount" placeholder="Montant" min="0" step="1" required>
-                </div>
-            `;
-            
-            updatePreview(type);
-            
-            alert('Transaction enregistrée avec succès !');
-            showTab('dashboard');
-            updateDashboard();
-            updateHistorique();
-        }
-        
-        // Supprimer une transaction
         function supprimerTransaction(id) {
-            if (confirm('Voulez-vous vraiment supprimer cette transaction ?')) {
+            if (confirm('⚠️ Supprimer cette transaction ?')) {
+                const transaction = transactions.find(t => t.id === id);
+                
+                // Si c'est une opération stock, inverser l'effet
+                if (transaction && transaction.type === 'stock') {
+                    if (transaction.operation === 'production') {
+                        stocks[transaction.produit] = Math.max(0, stocks[transaction.produit] - transaction.quantite);
+                    } else if (transaction.operation === 'vente') {
+                        stocks[transaction.produit] = (stocks[transaction.produit] || 0) + transaction.quantite;
+                    }
+                }
+                
                 transactions = transactions.filter(t => t.id !== id);
                 sauvegarderDonnees();
                 updateDashboard();
                 updateHistorique();
+                showMessage('🗑️ Transaction supprimée');
             }
         }
         
-        // Mettre à jour le dashboard
         function updateDashboard() {
+            // Vérifier que les éléments existent
+            if (!document.getElementById('total-depenses')) return;
+            
             const depenses = transactions
                 .filter(t => t.type === 'depense')
-                .reduce((sum, t) => sum + t.total, 0);
+                .reduce((sum, t) => sum + (t.total || 0), 0);
             
             const revenus = transactions
                 .filter(t => t.type === 'revenu')
-                .reduce((sum, t) => sum + t.total, 0);
+                .reduce((sum, t) => sum + (t.total || 0), 0);
             
             const benefice = revenus - depenses;
             
+            // Calculer valeur du stock (estimation)
+            const prixMoyenPalme = 15000; // GNF/L estimation
+            const prixMoyenPalmiste = 20000; // GNF/L estimation
+            const valeurStock = ((stocks.palme || 0) * prixMoyenPalme) + ((stocks.palmiste || 0) * prixMoyenPalmiste);
+            
             document.getElementById('total-depenses').textContent = formatMontant(depenses);
             document.getElementById('total-revenus').textContent = formatMontant(revenus);
-            document.getElementById('total-benefice').textContent = formatMontant(benefice);
-            document.getElementById('nb-transactions').textContent = transactions.length;
+            document.getElementById('total-benefice').textContent = formatMontant(Math.abs(benefice));
+            document.getElementById('valeur-stock').textContent = formatMontant(valeurStock);
             
-            // Changer la couleur du bénéfice si négatif
+            document.getElementById('nb-transactions').textContent = transactions.filter(t => t.type !== 'stock').length;
+            document.getElementById('nb-contacts').textContent = contacts.length;
+            document.getElementById('stock-palme').textContent = (stocks.palme || 0).toFixed(1);
+            document.getElementById('stock-palmiste').textContent = (stocks.palmiste || 0).toFixed(1);
+            
             const beneficeCard = document.getElementById('benefice-card');
             const beneficeValue = document.getElementById('total-benefice');
+            const beneficeLabel = document.querySelector('#benefice-card .stat-label');
             
-            if (benefice < 0) {
-                beneficeCard.className = 'stat-card orange';
-                beneficeValue.className = 'stat-value text-orange';
-            } else {
-                beneficeCard.className = 'stat-card blue';
-                beneficeValue.className = 'stat-value text-blue';
-            }
-        }
-        
-        // Mettre à jour l'historique
-        function updateHistorique() {
-            const container = document.getElementById('liste-transactions');
-            
-            if (transactions.length === 0) {
-                container.innerHTML = '<div class="empty-state"><p>Aucune transaction enregistrée</p></div>';
-                return;
-            }
-            
-            container.innerHTML = transactions.map(t => `
-                <div class="transaction-item">
-                    <div class="transaction-header">
-                        <div>
-                            <span class="transaction-type ${t.type === 'depense' ? 'type-depense' : 'type-revenu'}">
-                                ${t.type === 'depense' ? 'DÉPENSE' : 'REVENU'}
-                            </span>
-                            <div class="transaction-date">
-                                ${new Date(t.date).toLocaleDateString('fr-FR')}
-                            </div>
-                        </div>
-                        <button class="btn-remove" onclick="supprimerTransaction(${t.id})">🗑️</button>
-                    </div>
-                    
-                    <div class="transaction-lines">
-                        ${t.items.map(item => `
-                            <div class="transaction-line">
-                                <span>${item.nom}</span>
-                                <span>${formatMontant(item.montant)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <div class="transaction-total">
-                        <span>Total</span>
-                        <span class="${t.type === 'depense' ? 'text-red' : 'text-green'}">
-                            ${formatMontant(t.total)}
-                        </span>
-                    </div>
-                    
-                    ${t.note ? `<div class="transaction-note">📝 ${t.note}</div>` : ''}
-                </div>
-            `).join('');
-        }
-        
-        // Formater les montants
-        function formatMontant(montant) {
-            return new Intl.NumberFormat('fr-GN', {
-                style: 'currency',
-                currency: 'GNF',
-                minimumFractionDigits: 0
-            }).format(montant);
-        }
-        
-        // Sauvegarder les données
-        function sauvegarderDonnees() {
-            const data = {
-                version: '1.0',
-                transactions,
-                lastUpdate: new Date().toISOString()
-            };
-            localStorage.setItem('palmManagerData', JSON.stringify(data));
-        }
-        
-        // Charger les données
-        function chargerDonnees() {
-            const saved = localStorage.getItem('palmManagerData');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    transactions = data.transactions || [];
-                    updateDashboard();
-                    updateHistorique();
-                } catch (e) {
-                    console.error('Erreur chargement données:', e);
+            if (beneficeCard && beneficeValue && beneficeLabel) {
+                if (benefice < 0) {
+                    beneficeCard.className = 'stat-card orange';
+                    beneficeValue.className = 'stat-value text-orange';
+                    beneficeLabel.textContent = 'Déficit';
+                } else {
+                    beneficeCard.className = 'stat-card blue';
+                    beneficeValue.className = 'stat-value text-blue';
+                    beneficeLabel.textContent = 'Bénéfice Net';
                 }
             }
         }
         
-        // PWA functions
-        function installerApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('App installée');
-                    }
-                    deferredPrompt = null;
-                    cacherInstallPrompt();
-                });
+        function updateHistorique() {
+            if (transactions && transactions.length > 0) {
+                afficherTransactions(transactions);
+            } else {
+                const container = document.getElementById('liste-transactions');
+                if (container) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><p>Aucune transaction</p></div>';
+                }
             }
         }
         
-        function cacherInstallPrompt() {
-            document.getElementById('install-prompt').classList.add('hidden');
+        function formatMontant(montant) {
+            return new Intl.NumberFormat('fr-GN', {
+                style: 'currency',
+                currency: 'GNF',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(montant);
         }
+        
+        function formatDate(date) {
+            try {
+                return new Date(date).toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch(e) {
+                return date;
+            }
+        }
+        
+        function showMessage(text) {
+            const msg = document.getElementById('success-msg');
+            msg.textContent = text;
+            msg.classList.add('show');
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 3000);
+        }
+        
+        function sauvegarderDonnees() {
+            const data = {
+                version: APP_CONFIG.version,
+                transactions,
+                contacts,
+                stocks,
+                categories,
+                lastUpdate: new Date().toISOString()
+            };
+            try {
+                localStorage.setItem(APP_CONFIG.storageKey, JSON.stringify(data));
+            } catch (e) {
+                console.error('Erreur sauvegarde:', e);
+                alert('⚠️ Erreur de sauvegarde');
+            }
+        }
+        
+        function chargerDonnees() {
+            try {
+                const saved = localStorage.getItem(APP_CONFIG.storageKey);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    transactions = data.transactions || [];
+                    contacts = data.contacts || [];
+                    stocks = data.stocks || { palme: 0, palmiste: 0 };
+                    categories = data.categories || categories;
+                    console.log('Données chargées:', { 
+                        transactions: transactions.length, 
+                        contacts: contacts.length,
+                        stocks 
+                    });
+                } else {
+                    console.log('Aucune donnée sauvegardée trouvée');
+                }
+            } catch (e) {
+                console.error('Erreur chargement:', e);
+                // Réinitialiser avec des valeurs par défaut
+                transactions = [];
+                contacts = [];
+                stocks = { palme: 0, palmiste: 0 };
+            }
+        }
+        
+        // Message de fin de chargement
+        console.log('PalmManager v2 - Script chargé avec succès');
     </script>
 </body>
 </html>
