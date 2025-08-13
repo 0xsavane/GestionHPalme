@@ -300,6 +300,7 @@
             border-radius: 8px;
             margin-bottom: 8px;
             border: 1px solid #e5e7eb;
+            flex-wrap: wrap;
         }
         .line-item input, .line-item select {
             padding: 10px;
@@ -309,12 +310,30 @@
         }
         .line-item .desc {
             flex: 1;
+            min-width: 150px;
         }
         .line-item .category {
             width: 140px;
+            min-width: 120px;
         }
         .line-item .amount {
             width: 120px;
+            min-width: 100px;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 480px) {
+            .line-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .line-item input, .line-item select {
+                width: 100% !important;
+                margin-bottom: 6px;
+            }
+            .line-item .btn-remove {
+                align-self: flex-end;
+            }
         }
         .btn-remove {
             background: none;
@@ -588,6 +607,38 @@
                     </div>
                 </div>
                 
+                <!-- Nouvelle section calcul valeur -->
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #bbf7d0;">
+                    <h3 style="font-size: 16px; color: #16a34a; margin-bottom: 12px; font-weight: 600;">
+                        💰 Calcul de la valeur du stock
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 12px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px;">H. Palme - Prix/Litre (GNF)</label>
+                            <input type="number" id="prix-palme" class="form-input" placeholder="Prix unitaire" min="0" step="100" onchange="calculerValeurStock()" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px;">H. Palmiste - Prix/Litre (GNF)</label>
+                            <input type="number" id="prix-palmiste" class="form-input" placeholder="Prix unitaire" min="0" step="100" onchange="calculerValeurStock()" style="width: 100%;">
+                        </div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: white; border-radius: 6px;">
+                        <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Valeur totale estimée</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #16a34a;" id="valeur-stock-calculee">0 GNF</div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;" id="formule-calcul">
+                            Entrez les prix unitaires pour calculer la valeur
+                        </div>
+                    </div>
+                </div>
+                
+                <style>
+                    @media (max-width: 480px) {
+                        #stocks .stock-grid {
+                            grid-template-columns: 1fr;
+                        }
+                    }
+                </style>
+                
                 <form id="form-stock" onsubmit="enregistrerStock(event)">
                     <div class="form-group">
                         <label class="form-label">Type d'opération</label>
@@ -860,6 +911,10 @@
             palme: 0,
             palmiste: 0
         };
+        let prixUnitaires = {
+            palme: 0,
+            palmiste: 0
+        };
         let categories = {
             depense: ['matiere', 'transport', 'main', 'equipement', 'autre'],
             revenu: ['palme', 'palmiste', 'service', 'autre']
@@ -916,12 +971,58 @@
             tabElement.classList.add('active');
             
             if (tabName === 'dashboard') updateDashboard();
-            if (tabName === 'stocks') updateStocksDisplay();
+            if (tabName === 'stocks') {
+                updateStocksDisplay();
+                // Initialiser les champs de prix s'ils sont vides
+                if (document.getElementById('prix-palme') && !document.getElementById('prix-palme').value) {
+                    document.getElementById('prix-palme').value = prixUnitaires.palme || '';
+                }
+                if (document.getElementById('prix-palmiste') && !document.getElementById('prix-palmiste').value) {
+                    document.getElementById('prix-palmiste').value = prixUnitaires.palmiste || '';
+                }
+                calculerValeurStock();
+            }
             if (tabName === 'contacts') updateContactsList();
             if (tabName === 'historique') updateHistorique();
         }
         
         // STOCKS
+        function calculerValeurStock() {
+            const prixPalme = parseFloat(document.getElementById('prix-palme').value) || 0;
+            const prixPalmiste = parseFloat(document.getElementById('prix-palmiste').value) || 0;
+            
+            prixUnitaires.palme = prixPalme;
+            prixUnitaires.palmiste = prixPalmiste;
+            
+            const valeurTotale = ((stocks.palme || 0) * prixPalme) + ((stocks.palmiste || 0) * prixPalmiste);
+            
+            document.getElementById('valeur-stock-calculee').textContent = formatMontant(valeurTotale);
+            
+            // Afficher la formule de calcul
+            const formuleEl = document.getElementById('formule-calcul');
+            if (formuleEl) {
+                if (prixPalme || prixPalmiste) {
+                    const stockPalme = stocks.palme || 0;
+                    const stockPalmiste = stocks.palmiste || 0;
+                    const partPalme = prixPalme > 0 ? `${stockPalme.toFixed(1)}L × ${prixPalme} GNF` : '';
+                    const partPalmiste = prixPalmiste > 0 ? `${stockPalmiste.toFixed(1)}L × ${prixPalmiste} GNF` : '';
+                    const separator = (partPalme && partPalmiste) ? ' + ' : '';
+                    formuleEl.textContent = partPalme + separator + partPalmiste;
+                } else {
+                    formuleEl.textContent = 'Entrez les prix unitaires pour calculer la valeur';
+                }
+            }
+            
+            // Mettre à jour aussi le dashboard
+            const valeurStockEl = document.getElementById('valeur-stock');
+            if (valeurStockEl) {
+                valeurStockEl.textContent = formatMontant(valeurTotale);
+            }
+            
+            // Sauvegarder les prix
+            sauvegarderDonnees();
+        }
+        
         function updateStockForm() {
             const operation = document.getElementById('stock-operation').value;
             document.getElementById('stock-prix-group').style.display = operation === 'vente' ? 'block' : 'none';
@@ -1012,6 +1113,17 @@
                 if (stockPalmeEl) stockPalmeEl.textContent = (stocks.palme || 0).toFixed(1);
                 if (stockPalmisteEl) stockPalmisteEl.textContent = (stocks.palmiste || 0).toFixed(1);
                 
+                // Afficher les prix unitaires s'ils existent
+                const prixPalmeEl = document.getElementById('prix-palme');
+                const prixPalmisteEl = document.getElementById('prix-palmiste');
+                if (prixPalmeEl && prixUnitaires.palme) prixPalmeEl.value = prixUnitaires.palme;
+                if (prixPalmisteEl && prixUnitaires.palmiste) prixPalmisteEl.value = prixUnitaires.palmiste;
+                
+                // Calculer la valeur si les prix sont définis
+                if (prixUnitaires.palme || prixUnitaires.palmiste) {
+                    calculerValeurStock();
+                }
+                
                 // Mettre à jour le select des clients
                 const select = document.getElementById('stock-contact');
                 if (select) {
@@ -1030,6 +1142,16 @@
             form.classList.toggle('hidden');
             if (!form.classList.contains('hidden')) {
                 document.getElementById('contact-nom').focus();
+            }
+        }
+        
+        function supprimerContact(id) {
+            if (confirm('⚠️ Voulez-vous vraiment supprimer ce contact ?')) {
+                contacts = contacts.filter(c => c.id !== id);
+                sauvegarderDonnees();
+                updateContactsList();
+                updateContactSelects();
+                showMessage('🗑️ Contact supprimé');
             }
         }
         
@@ -1102,6 +1224,9 @@
                     <div class="contact-stats">
                         <div class="contact-total">${formatMontant(c.totalTransactions)}</div>
                         <div class="contact-count">${c.nombreTransactions} transaction(s)</div>
+                        <button onclick="supprimerContact(${c.id})" style="margin-top: 8px; padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            🗑️ Supprimer
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -1144,6 +1269,13 @@
                 return;
             }
             
+            // Recalculer les totaux pour l'affichage
+            filtered.forEach(contact => {
+                const contactTransactions = transactions.filter(t => t.contactId === String(contact.id));
+                contact.totalTransactions = contactTransactions.reduce((sum, t) => sum + (t.total || 0), 0);
+                contact.nombreTransactions = contactTransactions.length;
+            });
+            
             container.innerHTML = filtered.map(c => `
                 <div class="contact-card">
                     <div class="contact-info">
@@ -1154,6 +1286,13 @@
                         <div class="contact-details">
                             ${c.tel ? `📞 ${c.tel}` : ''} ${c.adresse ? `📍 ${c.adresse}` : ''}
                         </div>
+                    </div>
+                    <div class="contact-stats">
+                        <div class="contact-total">${formatMontant(c.totalTransactions)}</div>
+                        <div class="contact-count">${c.nombreTransactions} transaction(s)</div>
+                        <button onclick="supprimerContact(${c.id})" style="margin-top: 8px; padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            🗑️ Supprimer
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -1441,10 +1580,9 @@
             
             const benefice = revenus - depenses;
             
-            // Calculer valeur du stock (estimation)
-            const prixMoyenPalme = 15000; // GNF/L estimation
-            const prixMoyenPalmiste = 20000; // GNF/L estimation
-            const valeurStock = ((stocks.palme || 0) * prixMoyenPalme) + ((stocks.palmiste || 0) * prixMoyenPalmiste);
+            // Calculer valeur du stock avec les prix définis par l'utilisateur
+            const valeurStock = ((stocks.palme || 0) * (prixUnitaires.palme || 0)) + 
+                               ((stocks.palmiste || 0) * (prixUnitaires.palmiste || 0));
             
             document.getElementById('total-depenses').textContent = formatMontant(depenses);
             document.getElementById('total-revenus').textContent = formatMontant(revenus);
@@ -1521,6 +1659,7 @@
                 transactions,
                 contacts,
                 stocks,
+                prixUnitaires,
                 categories,
                 lastUpdate: new Date().toISOString()
             };
@@ -1540,11 +1679,13 @@
                     transactions = data.transactions || [];
                     contacts = data.contacts || [];
                     stocks = data.stocks || { palme: 0, palmiste: 0 };
+                    prixUnitaires = data.prixUnitaires || { palme: 0, palmiste: 0 };
                     categories = data.categories || categories;
                     console.log('Données chargées:', { 
                         transactions: transactions.length, 
                         contacts: contacts.length,
-                        stocks 
+                        stocks,
+                        prixUnitaires 
                     });
                 } else {
                     console.log('Aucune donnée sauvegardée trouvée');
@@ -1555,6 +1696,7 @@
                 transactions = [];
                 contacts = [];
                 stocks = { palme: 0, palmiste: 0 };
+                prixUnitaires = { palme: 0, palmiste: 0 };
             }
         }
         
