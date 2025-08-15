@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PalmManager v2 - Gestion Avancée</title>
+    <title>PalmManager v3.2 - Gestion avec Créances/Dettes (Sans graphiques)</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#10b981">
@@ -433,6 +433,36 @@
             background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
             color: #9333ea;
         }
+        .transaction-date {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .transaction-lines {
+            margin-bottom: 12px;
+        }
+        .transaction-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 14px;
+            color: #374151;
+        }
+        .transaction-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 16px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .transaction-note {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f3f4f6;
+        }
         
         /* Filters */
         .filter-bar {
@@ -515,13 +545,35 @@
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
+        
+        /* Total preview (shared styling) */
+        .total-preview {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #bbf7d0;
+        }
+        .total-preview-label {
+            font-size: 12px;
+            color: #374151;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .total-preview-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #16a34a;
+        }
     </style>
 </head>
 <body>
     <!-- Header -->
     <div class="header">
         <h1>🌴 PalmManager Pro</h1>
-        <p>Gestion Complète - v2.0</p>
+        <p>Version 3.2 - Créances/Dettes</p>
     </div>
     
     <!-- Tabs -->
@@ -568,6 +620,19 @@
                     <div class="stat-value text-purple" id="valeur-stock">0 GNF</div>
                 </div>
                 
+                <!-- Nouvelles cartes pour créances et dettes -->
+                <div class="stat-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #fbbf24; cursor: pointer;" onclick="afficherCreances()">
+                    <div class="stat-label" style="color: #92400e;">Créances Clients</div>
+                    <div class="stat-value" style="color: #d97706;" id="total-creances">0 GNF</div>
+                    <div style="font-size: 11px; color: #92400e; margin-top: 4px;">Cliquez pour voir les détails</div>
+                </div>
+                
+                <div class="stat-card" style="background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%); border-color: #f87171; cursor: pointer;" onclick="afficherDettes()">
+                    <div class="stat-label" style="color: #7f1d1d;">Dettes Fournisseurs</div>
+                    <div class="stat-value" style="color: #b91c1c;" id="total-dettes">0 GNF</div>
+                    <div style="font-size: 11px; color: #7f1d1d; margin-top: 4px;">Cliquez pour voir les détails</div>
+                </div>
+                
                 <div class="quick-stats">
                     <div class="quick-stat">
                         <div class="quick-stat-value" id="nb-transactions">0</div>
@@ -585,6 +650,33 @@
                         <div class="quick-stat-value" id="stock-palmiste">0</div>
                         <div class="quick-stat-label">Stock Palmiste (L)</div>
                     </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="nb-creances">0</div>
+                        <div class="quick-stat-label">Créances actives</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="quick-stat-value" id="nb-dettes">0</div>
+                        <div class="quick-stat-label">Dettes actives</div>
+                    </div>
+                </div>
+                
+                <!-- Tableau récapitulatif simple -->
+                <div style="margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <h3 style="font-size: 14px; color: #374151; margin-bottom: 12px;">📊 Récapitulatif du mois</h3>
+                    <table style="width: 100%; font-size: 13px;">
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 8px;">Transactions ce mois</td>
+                            <td style="text-align: right; font-weight: bold;" id="trans-mois">0</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 8px;">Moyenne/jour</td>
+                            <td style="text-align: right; font-weight: bold;" id="moy-jour">0 GNF</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Marge nette</td>
+                            <td style="text-align: right; font-weight: bold;" id="marge-nette">0%</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
@@ -661,12 +753,25 @@
                     
                     <div class="form-group">
                         <label class="form-label">Quantité (Litres)</label>
-                        <input type="number" class="form-input" id="stock-quantite" min="0" step="0.5" required>
+                        <input type="number" class="form-input" id="stock-quantite" min="0" step="0.5" required onchange="calculerMontantVente()">
                     </div>
                     
                     <div class="form-group" id="stock-prix-group" style="display:none;">
                         <label class="form-label">Prix unitaire (GNF/Litre)</label>
-                        <input type="number" class="form-input" id="stock-prix" min="0" step="100">
+                        <input type="number" class="form-input" id="stock-prix" min="0" step="100" onchange="calculerMontantVente()">
+                    </div>
+                    
+                    <div class="form-group" id="stock-montant-group" style="display:none;">
+                        <label class="form-label">Montant total de la vente</label>
+                        <input type="number" class="form-input" id="stock-montant-total" readonly style="background: #f3f4f6;">
+                    </div>
+                    
+                    <div class="form-group" id="stock-paiement-group" style="display:none;">
+                        <label class="form-label">Montant reçu (laisser vide si paiement complet)</label>
+                        <input type="number" class="form-input" id="stock-montant-recu" min="0" step="100" placeholder="Montant payé par le client" onchange="calculerMontantVente()">
+                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 6px; display: none;" id="stock-credit-info">
+                            <span style="font-size: 13px; color: #92400e;">💳 Crédit: <strong id="stock-credit-montant">0 GNF</strong></span>
+                        </div>
                     </div>
                     
                     <div class="form-group" id="stock-contact-group" style="display:none;">
@@ -730,6 +835,23 @@
                         <textarea class="form-input" id="note-depense" rows="2" placeholder="Informations supplémentaires..."></textarea>
                     </div>
                     
+                    <div class="form-group">
+                        <label class="form-label">Paiement</label>
+                        <select class="form-select" id="paiement-depense" onchange="toggleMontantPaye('depense')">
+                            <option value="complet">Paiement complet</option>
+                            <option value="partiel">Paiement partiel</option>
+                            <option value="credit">À crédit (non payé)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="montant-paye-depense-group" style="display:none;">
+                        <label class="form-label">Montant payé</label>
+                        <input type="number" class="form-input" id="montant-paye-depense" min="0" step="100" onchange="updatePreview('depense')">
+                        <div style="margin-top: 8px; padding: 8px; background: #fee2e2; border-radius: 6px; display: none;" id="dette-info-depense">
+                            <span style="font-size: 13px; color: #7f1d1d;">📝 Dette: <strong id="dette-montant-depense">0 GNF</strong></span>
+                        </div>
+                    </div>
+                    
                     <div class="total-preview">
                         <div class="total-preview-label">Total à enregistrer:</div>
                         <div class="total-preview-value" id="preview-depense">0 GNF</div>
@@ -781,6 +903,23 @@
                     <div class="form-group">
                         <label class="form-label">Note (optionnel)</label>
                         <textarea class="form-input" id="note-revenu" rows="2" placeholder="Informations supplémentaires..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Paiement</label>
+                        <select class="form-select" id="paiement-revenu" onchange="toggleMontantPaye('revenu')">
+                            <option value="complet">Paiement complet</option>
+                            <option value="partiel">Paiement partiel</option>
+                            <option value="credit">À crédit (non reçu)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="montant-paye-revenu-group" style="display:none;">
+                        <label class="form-label">Montant reçu</label>
+                        <input type="number" class="form-input" id="montant-paye-revenu" min="0" step="100" onchange="updatePreview('revenu')">
+                        <div style="margin-top: 8px; padding: 8px; background: #fef3c7; border-radius: 6px; display: none;" id="creance-info-revenu">
+                            <span style="font-size: 13px; color: #92400e;">💳 Créance: <strong id="creance-montant-revenu">0 GNF</strong></span>
+                        </div>
                     </div>
                     
                     <div class="total-preview">
@@ -870,38 +1009,15 @@
         </div>
     </div>
     
-    <!-- Total preview (shared styling) -->
-    <style>
-        .total-preview {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            border: 1px solid #bbf7d0;
-        }
-        .total-preview-label {
-            font-size: 12px;
-            color: #374151;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-        .total-preview-value {
-            font-size: 22px;
-            font-weight: bold;
-            color: #16a34a;
-        }
-    </style>
-    
     <script>
-        console.log('PalmManager v2 - Chargement du script...');
+        // Vérification immédiate
+        console.log('PalmManager v3.2 - Début du chargement...');
         
         // Configuration
         const APP_CONFIG = {
-            version: '2.0',
+            version: '3.2',
             currency: 'GNF',
-            storageKey: 'palmManagerDataV2'
+            storageKey: 'palmManagerDataV3'
         };
         
         // État global
@@ -922,6 +1038,7 @@
         
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM chargé, initialisation...');
             initApp();
         });
         
@@ -947,6 +1064,7 @@
                 updateContactSelects();
                 updateDashboard();
                 updateHistorique();
+                updateTableauRecap();
                 
                 console.log('App initialisée avec succès');
             } catch (error) {
@@ -956,34 +1074,319 @@
         
         // Gestion des tabs
         function showTab(tabName, tabElement) {
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            const content = document.getElementById(tabName);
-            content.classList.remove('hidden');
-            content.classList.add('fade-in');
-            
-            tabElement.classList.add('active');
-            
-            if (tabName === 'dashboard') updateDashboard();
-            if (tabName === 'stocks') {
-                updateStocksDisplay();
-                // Initialiser les champs de prix s'ils sont vides
-                if (document.getElementById('prix-palme') && !document.getElementById('prix-palme').value) {
-                    document.getElementById('prix-palme').value = prixUnitaires.palme || '';
+            try {
+                console.log('showTab appelé pour:', tabName);
+                
+                // Masquer tous les contenus
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Désactiver tous les tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Afficher le contenu sélectionné
+                const content = document.getElementById(tabName);
+                if (content) {
+                    content.classList.remove('hidden');
+                    content.classList.add('fade-in');
                 }
-                if (document.getElementById('prix-palmiste') && !document.getElementById('prix-palmiste').value) {
-                    document.getElementById('prix-palmiste').value = prixUnitaires.palmiste || '';
+                
+                // Activer le tab
+                if (tabElement) {
+                    tabElement.classList.add('active');
                 }
-                calculerValeurStock();
+                
+                // Actions spécifiques par tab
+                if (tabName === 'dashboard') {
+                    updateDashboard();
+                    updateTableauRecap();
+                } else if (tabName === 'stocks') {
+                    updateStocksDisplay();
+                    const prixPalmeEl = document.getElementById('prix-palme');
+                    const prixPalmisteEl = document.getElementById('prix-palmiste');
+                    if (prixPalmeEl && !prixPalmeEl.value && prixUnitaires.palme) {
+                        prixPalmeEl.value = prixUnitaires.palme;
+                    }
+                    if (prixPalmisteEl && !prixPalmisteEl.value && prixUnitaires.palmiste) {
+                        prixPalmisteEl.value = prixUnitaires.palmiste;
+                    }
+                    calculerValeurStock();
+                } else if (tabName === 'contacts') {
+                    updateContactsList();
+                } else if (tabName === 'historique') {
+                    updateHistorique();
+                }
+            } catch (error) {
+                console.error('Erreur dans showTab:', error);
             }
-            if (tabName === 'contacts') updateContactsList();
-            if (tabName === 'historique') updateHistorique();
+        }
+        
+        // Tableau récapitulatif
+        function updateTableauRecap() {
+            try {
+                // Transactions du mois en cours
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const transactionsMois = transactions.filter(t => new Date(t.date) >= startOfMonth);
+                
+                // Nombre de transactions
+                const nbTransMois = transactionsMois.length;
+                const transMoisEl = document.getElementById('trans-mois');
+                if (transMoisEl) transMoisEl.textContent = nbTransMois;
+                
+                // Moyenne par jour
+                const joursEcoules = now.getDate();
+                const totalMois = transactionsMois.reduce((sum, t) => sum + (t.total || 0), 0);
+                const moyenneJour = joursEcoules > 0 ? totalMois / joursEcoules : 0;
+                const moyJourEl = document.getElementById('moy-jour');
+                if (moyJourEl) moyJourEl.textContent = formatMontant(moyenneJour);
+                
+                // Marge nette
+                const revenusMois = transactionsMois
+                    .filter(t => t.type === 'revenu')
+                    .reduce((sum, t) => sum + (t.total || 0), 0);
+                const depensesMois = transactionsMois
+                    .filter(t => t.type === 'depense')
+                    .reduce((sum, t) => sum + (t.total || 0), 0);
+                const margeNette = revenusMois > 0 ? ((revenusMois - depensesMois) / revenusMois * 100) : 0;
+                const margeNetteEl = document.getElementById('marge-nette');
+                if (margeNetteEl) margeNetteEl.textContent = margeNette.toFixed(1) + '%';
+            } catch (error) {
+                console.error('Erreur updateTableauRecap:', error);
+            }
+        }
+        
+        // Rendre les fonctions globales pour onclick
+        window.showTab = showTab;
+        window.updateStockForm = updateStockForm;
+        window.calculerValeurStock = calculerValeurStock;
+        window.ajouterLigne = ajouterLigne;
+        window.updatePreview = updatePreview;
+        window.enregistrerStock = enregistrerStock;
+        window.enregistrerTransaction = enregistrerTransaction;
+        window.supprimerTransaction = supprimerTransaction;
+        window.toggleContactForm = toggleContactForm;
+        window.supprimerContact = supprimerContact;
+        window.ajouterContact = ajouterContact;
+        window.rechercherContacts = rechercherContacts;
+        window.rechercherTransactions = rechercherTransactions;
+        window.filtrerTransactions = filtrerTransactions;
+        window.toggleMontantPaye = toggleMontantPaye;
+        window.calculerMontantVente = calculerMontantVente;
+        window.voirDetailsContact = voirDetailsContact;
+        window.fermerDetailsContact = fermerDetailsContact;
+        window.marquerPaye = marquerPaye;
+        window.afficherCreances = afficherCreances;
+        window.afficherDettes = afficherDettes;
+        
+        // Voir détails d'un contact
+        function voirDetailsContact(contactId) {
+            const contact = contacts.find(c => c.id === contactId);
+            if (!contact) return;
+            
+            const contactTransactions = transactions.filter(t => t.contactId === String(contactId));
+            const creances = contactTransactions
+                .filter(t => t.type === 'revenu' && (t.montantDu || 0) > 0);
+            const dettes = contactTransactions
+                .filter(t => t.type === 'depense' && (t.montantDu || 0) > 0);
+            
+            let detailsHtml = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: white; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: 20px; margin-bottom: 8px;">${contact.nom}</h2>
+                                <span class="contact-type ${contact.type === 'client' ? 'type-client' : 'type-fournisseur'}">
+                                    ${contact.type === 'client' ? '👤 Client' : '🏭 Fournisseur'}
+                                </span>
+                            </div>
+                            <button onclick="fermerDetailsContact()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✖</button>
+                        </div>
+                        
+                        ${creances.length > 0 ? `
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="font-size: 16px; color: #92400e; margin-bottom: 12px;">💳 Créances (nous doit)</h3>
+                                ${creances.map(t => `
+                                    <div style="padding: 12px; background: #fef3c7; border-radius: 8px; margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 500;">${(t.items || []).map(i => i.nom).join(', ')}</div>
+                                                <div style="font-size: 12px; color: #92400e; margin-top: 4px;">
+                                                    📅 ${new Date(t.date).toLocaleDateString('fr-FR')} | 
+                                                    Montant dû: <strong>${formatMontant(t.montantDu)}</strong>
+                                                </div>
+                                            </div>
+                                            <button onclick="marquerPaye(${t.id}, 'revenu')" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                                ✅ Payé
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${dettes.length > 0 ? `
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="font-size: 16px; color: #7f1d1d; margin-bottom: 12px;">📝 Dettes (nous devons)</h3>
+                                ${dettes.map(t => `
+                                    <div style="padding: 12px; background: #fee2e2; border-radius: 8px; margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <div style="font-size: 14px; font-weight: 500;">${(t.items || []).map(i => i.nom).join(', ')}</div>
+                                                <div style="font-size: 12px; color: #7f1d1d; margin-top: 4px;">
+                                                    📅 ${new Date(t.date).toLocaleDateString('fr-FR')} | 
+                                                    Montant dû: <strong>${formatMontant(t.montantDu)}</strong>
+                                                </div>
+                                            </div>
+                                            <button onclick="marquerPaye(${t.id}, 'depense')" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                                ✅ Payé
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <h3 style="font-size: 16px; margin-bottom: 12px;">📜 Historique complet</h3>
+                            <div style="font-size: 14px; color: #6b7280;">
+                                ${contactTransactions.length} transaction(s) - Total: ${formatMontant(contactTransactions.reduce((sum, t) => sum + (t.total || 0), 0))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Créer et afficher la modal
+            const modalDiv = document.createElement('div');
+            modalDiv.id = 'contact-details-modal';
+            modalDiv.innerHTML = detailsHtml;
+            document.body.appendChild(modalDiv);
+        }
+        
+        function fermerDetailsContact() {
+            const modal = document.getElementById('contact-details-modal');
+            if (modal) modal.remove();
+        }
+        
+        function marquerPaye(transactionId, type) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (transaction) {
+                transaction.montantDu = 0;
+                if (type === 'revenu') {
+                    transaction.montantRecu = transaction.total;
+                    transaction.estCreance = false;
+                } else {
+                    transaction.montantPaye = transaction.total;
+                    transaction.estDette = false;
+                }
+                sauvegarderDonnees();
+                updateDashboard();
+                updateContactsList();
+                fermerDetailsContact();
+                showMessage('✅ Marqué comme payé !');
+            }
+        }
+        
+        // Afficher liste des créances
+        function afficherCreances() {
+            const creances = transactions.filter(t => t.type === 'revenu' && (t.montantDu || 0) > 0);
+            if (creances.length === 0) {
+                alert('Aucune créance en cours');
+                return;
+            }
+            
+            let html = '<div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">';
+            html += '<div style="background: white; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 24px;">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">';
+            html += '<h2 style="font-size: 20px;">💳 Créances Clients</h2>';
+            html += '<button onclick="document.getElementById(\'creances-modal\').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✖</button>';
+            html += '</div>';
+            
+            creances.forEach(t => {
+                const contact = t.contactId ? contacts.find(c => c.id == t.contactId) : null;
+                html += '<div style="padding: 12px; background: #fef3c7; border-radius: 8px; margin-bottom: 8px;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+                html += '<div>';
+                html += '<div style="font-size: 14px; font-weight: 500;">';
+                html += contact ? `👤 ${contact.nom}` : 'Client non spécifié';
+                html += '</div>';
+                html += '<div style="font-size: 13px; margin-top: 4px;">';
+                html += t.items ? t.items.map(i => i.nom).join(', ') : 'Vente';
+                html += '</div>';
+                html += '<div style="font-size: 12px; color: #92400e; margin-top: 4px;">';
+                html += `📅 ${new Date(t.date).toLocaleDateString('fr-FR')} | `;
+                html += `Montant dû: <strong>${formatMontant(t.montantDu)}</strong>`;
+                html += '</div>';
+                html += '</div>';
+                html += `<button onclick="marquerPaye(${t.id}, 'revenu'); document.getElementById('creances-modal').remove();" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">✅ Payé</button>`;
+                html += '</div>';
+                html += '</div>';
+            });
+            
+            const total = creances.reduce((sum, t) => sum + (t.montantDu || 0), 0);
+            html += '<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-weight: bold;">';
+            html += `Total: ${formatMontant(total)}`;
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            const modal = document.createElement('div');
+            modal.id = 'creances-modal';
+            modal.innerHTML = html;
+            document.body.appendChild(modal);
+        }
+        
+        // Afficher liste des dettes
+        function afficherDettes() {
+            const dettes = transactions.filter(t => t.type === 'depense' && (t.montantDu || 0) > 0);
+            if (dettes.length === 0) {
+                alert('Aucune dette en cours');
+                return;
+            }
+            
+            let html = '<div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">';
+            html += '<div style="background: white; border-radius: 12px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 24px;">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">';
+            html += '<h2 style="font-size: 20px;">📝 Dettes Fournisseurs</h2>';
+            html += '<button onclick="document.getElementById(\'dettes-modal\').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✖</button>';
+            html += '</div>';
+            
+            dettes.forEach(t => {
+                const contact = t.contactId ? contacts.find(c => c.id == t.contactId) : null;
+                html += '<div style="padding: 12px; background: #fee2e2; border-radius: 8px; margin-bottom: 8px;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+                html += '<div>';
+                html += '<div style="font-size: 14px; font-weight: 500;">';
+                html += contact ? `🏭 ${contact.nom}` : 'Fournisseur non spécifié';
+                html += '</div>';
+                html += '<div style="font-size: 13px; margin-top: 4px;">';
+                html += t.items ? t.items.map(i => i.nom).join(', ') : 'Achat';
+                html += '</div>';
+                html += '<div style="font-size: 12px; color: #7f1d1d; margin-top: 4px;">';
+                html += `📅 ${new Date(t.date).toLocaleDateString('fr-FR')} | `;
+                html += `Montant dû: <strong>${formatMontant(t.montantDu)}</strong>`;
+                html += '</div>';
+                html += '</div>';
+                html += `<button onclick="marquerPaye(${t.id}, 'depense'); document.getElementById('dettes-modal').remove();" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">✅ Payé</button>`;
+                html += '</div>';
+                html += '</div>';
+            });
+            
+            const total = dettes.reduce((sum, t) => sum + (t.montantDu || 0), 0);
+            html += '<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-weight: bold;">';
+            html += `Total: ${formatMontant(total)}`;
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            const modal = document.createElement('div');
+            modal.id = 'dettes-modal';
+            modal.innerHTML = html;
+            document.body.appendChild(modal);
         }
         
         // STOCKS
@@ -1026,7 +1429,32 @@
         function updateStockForm() {
             const operation = document.getElementById('stock-operation').value;
             document.getElementById('stock-prix-group').style.display = operation === 'vente' ? 'block' : 'none';
+            document.getElementById('stock-montant-group').style.display = operation === 'vente' ? 'block' : 'none';
+            document.getElementById('stock-paiement-group').style.display = operation === 'vente' ? 'block' : 'none';
             document.getElementById('stock-contact-group').style.display = operation === 'vente' ? 'block' : 'none';
+            
+            // Calculer le montant total si c'est une vente
+            if (operation === 'vente') {
+                calculerMontantVente();
+            }
+        }
+        
+        function calculerMontantVente() {
+            const quantite = parseFloat(document.getElementById('stock-quantite').value) || 0;
+            const prix = parseFloat(document.getElementById('stock-prix').value) || 0;
+            const montantTotal = quantite * prix;
+            
+            document.getElementById('stock-montant-total').value = montantTotal;
+            
+            // Vérifier si montant reçu est différent du total
+            const montantRecu = parseFloat(document.getElementById('stock-montant-recu').value) || 0;
+            if (montantRecu > 0 && montantRecu < montantTotal) {
+                const credit = montantTotal - montantRecu;
+                document.getElementById('stock-credit-montant').textContent = formatMontant(credit);
+                document.getElementById('stock-credit-info').style.display = 'block';
+            } else {
+                document.getElementById('stock-credit-info').style.display = 'none';
+            }
         }
         
         function enregistrerStock(event) {
@@ -1203,11 +1631,22 @@
                 return;
             }
             
-            // Calculer les totaux par contact
+            // Calculer les totaux et créances/dettes par contact
             contacts.forEach(contact => {
                 const contactTransactions = transactions.filter(t => t.contactId === String(contact.id));
                 contact.totalTransactions = contactTransactions.reduce((sum, t) => sum + (t.total || 0), 0);
                 contact.nombreTransactions = contactTransactions.length;
+                
+                // Calculer créances ou dettes
+                if (contact.type === 'client') {
+                    contact.creances = contactTransactions
+                        .filter(t => t.type === 'revenu' && (t.montantDu || 0) > 0)
+                        .reduce((sum, t) => sum + (t.montantDu || 0), 0);
+                } else {
+                    contact.dettes = contactTransactions
+                        .filter(t => t.type === 'depense' && (t.montantDu || 0) > 0)
+                        .reduce((sum, t) => sum + (t.montantDu || 0), 0);
+                }
             });
             
             container.innerHTML = contacts.map(c => `
@@ -1220,11 +1659,24 @@
                         <div class="contact-details">
                             ${c.tel ? `📞 ${c.tel}` : ''} ${c.adresse ? `📍 ${c.adresse}` : ''}
                         </div>
+                        ${(c.creances || 0) > 0 ? `
+                            <div style="margin-top: 8px; padding: 6px; background: #fef3c7; border-radius: 4px;">
+                                <span style="font-size: 12px; color: #92400e;">💳 Nous doit: <strong>${formatMontant(c.creances)}</strong></span>
+                            </div>
+                        ` : ''}
+                        ${(c.dettes || 0) > 0 ? `
+                            <div style="margin-top: 8px; padding: 6px; background: #fee2e2; border-radius: 4px;">
+                                <span style="font-size: 12px; color: #7f1d1d;">📝 Nous devons: <strong>${formatMontant(c.dettes)}</strong></span>
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="contact-stats">
                         <div class="contact-total">${formatMontant(c.totalTransactions)}</div>
                         <div class="contact-count">${c.nombreTransactions} transaction(s)</div>
-                        <button onclick="supprimerContact(${c.id})" style="margin-top: 8px; padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                        <button onclick="voirDetailsContact(${c.id})" style="margin-top: 8px; padding: 6px 12px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            👁️ Détails
+                        </button>
+                        <button onclick="supprimerContact(${c.id})" style="margin-top: 4px; padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
                             🗑️ Supprimer
                         </button>
                     </div>
@@ -1274,6 +1726,17 @@
                 const contactTransactions = transactions.filter(t => t.contactId === String(contact.id));
                 contact.totalTransactions = contactTransactions.reduce((sum, t) => sum + (t.total || 0), 0);
                 contact.nombreTransactions = contactTransactions.length;
+                
+                // Calculer créances ou dettes
+                if (contact.type === 'client') {
+                    contact.creances = contactTransactions
+                        .filter(t => t.type === 'revenu' && (t.montantDu || 0) > 0)
+                        .reduce((sum, t) => sum + (t.montantDu || 0), 0);
+                } else {
+                    contact.dettes = contactTransactions
+                        .filter(t => t.type === 'depense' && (t.montantDu || 0) > 0)
+                        .reduce((sum, t) => sum + (t.montantDu || 0), 0);
+                }
             });
             
             container.innerHTML = filtered.map(c => `
@@ -1286,16 +1749,44 @@
                         <div class="contact-details">
                             ${c.tel ? `📞 ${c.tel}` : ''} ${c.adresse ? `📍 ${c.adresse}` : ''}
                         </div>
+                        ${(c.creances || 0) > 0 ? `
+                            <div style="margin-top: 8px; padding: 6px; background: #fef3c7; border-radius: 4px;">
+                                <span style="font-size: 12px; color: #92400e;">💳 Nous doit: <strong>${formatMontant(c.creances)}</strong></span>
+                            </div>
+                        ` : ''}
+                        ${(c.dettes || 0) > 0 ? `
+                            <div style="margin-top: 8px; padding: 6px; background: #fee2e2; border-radius: 4px;">
+                                <span style="font-size: 12px; color: #7f1d1d;">📝 Nous devons: <strong>${formatMontant(c.dettes)}</strong></span>
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="contact-stats">
                         <div class="contact-total">${formatMontant(c.totalTransactions)}</div>
                         <div class="contact-count">${c.nombreTransactions} transaction(s)</div>
-                        <button onclick="supprimerContact(${c.id})" style="margin-top: 8px; padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                        <button onclick="voirDetailsContact(${c.id})" style="margin-top: 8px; padding: 6px 12px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            👁️ Détails
+                        </button>
+                        <button onclick="supprimerContact(${c.id})" style="margin-top: 4px; padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
                             🗑️ Supprimer
                         </button>
                     </div>
                 </div>
             `).join('');
+        }
+        
+        // GESTION DES CRÉANCES ET DETTES
+        function toggleMontantPaye(type) {
+            const paiement = document.getElementById(`paiement-${type}`).value;
+            const montantGroup = document.getElementById(`montant-paye-${type}-group`);
+            
+            if (paiement === 'partiel') {
+                montantGroup.style.display = 'block';
+            } else {
+                montantGroup.style.display = 'none';
+                document.getElementById(`montant-paye-${type}`).value = '';
+            }
+            
+            updatePreview(type);
         }
         
         // TRANSACTIONS AMÉLIORÉES
@@ -1326,6 +1817,7 @@
                 const note = document.getElementById(`note-${type}`).value;
                 const contactId = document.getElementById(type === 'depense' ? 'fournisseur-depense' : 'client-revenu').value;
                 const lines = document.querySelectorAll(`#lignes-${type} .line-item`);
+                const paiement = document.getElementById(`paiement-${type}`).value;
                 
                 const items = [];
                 let total = 0;
@@ -1346,12 +1838,25 @@
                     return;
                 }
                 
+                // Calculer montant payé/reçu
+                let montantPaye = total;
+                if (paiement === 'partiel') {
+                    montantPaye = parseFloat(document.getElementById(`montant-paye-${type}`).value) || 0;
+                } else if (paiement === 'credit') {
+                    montantPaye = 0;
+                }
+                
                 const transaction = {
                     id: Date.now(),
                     type,
                     date,
                     items,
                     total,
+                    montantRecu: type === 'revenu' ? montantPaye : total,
+                    montantPaye: type === 'depense' ? montantPaye : total,
+                    montantDu: total - montantPaye,
+                    estCreance: type === 'revenu' && montantPaye < total,
+                    estDette: type === 'depense' && montantPaye < total,
                     contactId,
                     note,
                     timestamp: new Date().toISOString()
@@ -1363,6 +1868,9 @@
                 // Réinitialiser le formulaire
                 event.target.reset();
                 document.getElementById(`date-${type}`).value = new Date().toISOString().split('T')[0];
+                document.getElementById(`paiement-${type}`).value = 'complet';
+                document.getElementById(`montant-paye-${type}-group`).style.display = 'none';
+                document.getElementById(`${type === 'depense' ? 'dette' : 'creance'}-info-${type}`).style.display = 'none';
                 
                 const container = document.getElementById(`lignes-${type}`);
                 const categoriesOptions = type === 'depense' 
@@ -1511,6 +2019,16 @@
                                     ${formatMontant(t.total || 0)}
                                 </span>
                             </div>
+                            ${(t.montantDu || 0) > 0 ? `
+                                <div style="margin-top: 8px; padding: 8px; background: ${t.type === 'revenu' ? '#fef3c7' : '#fee2e2'}; border-radius: 6px;">
+                                    <span style="font-size: 12px; color: ${t.type === 'revenu' ? '#92400e' : '#7f1d1d'};">
+                                        ${t.type === 'revenu' ? '💳 Créance:' : '📝 Dette:'} <strong>${formatMontant(t.montantDu)}</strong>
+                                    </span>
+                                    <button onclick="marquerPaye(${t.id}, '${t.type}')" style="margin-left: 8px; padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                                        Marquer payé
+                                    </button>
+                                </div>
+                            ` : ''}
                             ${t.note ? `<div class="transaction-note">📝 ${t.note}</div>` : ''}
                         </div>
                     `;
@@ -1543,6 +2061,31 @@
             });
             
             document.getElementById(`preview-${type}`).textContent = formatMontant(total);
+            
+            // Gérer l'affichage des créances/dettes
+            const paiement = document.getElementById(`paiement-${type}`).value;
+            if (paiement === 'partiel') {
+                const montantPaye = parseFloat(document.getElementById(`montant-paye-${type}`).value) || 0;
+                const reste = total - montantPaye;
+                
+                if (type === 'depense') {
+                    document.getElementById('dette-montant-depense').textContent = formatMontant(reste);
+                    document.getElementById('dette-info-depense').style.display = reste > 0 ? 'block' : 'none';
+                } else {
+                    document.getElementById('creance-montant-revenu').textContent = formatMontant(reste);
+                    document.getElementById('creance-info-revenu').style.display = reste > 0 ? 'block' : 'none';
+                }
+            } else if (paiement === 'credit') {
+                if (type === 'depense') {
+                    document.getElementById('dette-montant-depense').textContent = formatMontant(total);
+                    document.getElementById('dette-info-depense').style.display = 'block';
+                } else {
+                    document.getElementById('creance-montant-revenu').textContent = formatMontant(total);
+                    document.getElementById('creance-info-revenu').style.display = 'block';
+                }
+            } else {
+                document.getElementById(`${type === 'depense' ? 'dette' : 'creance'}-info-${type}`).style.display = 'none';
+            }
         }
         
         function supprimerTransaction(id) {
@@ -1580,6 +2123,15 @@
             
             const benefice = revenus - depenses;
             
+            // Calculer créances et dettes
+            const creances = transactions
+                .filter(t => t.type === 'revenu' && t.montantDu > 0)
+                .reduce((sum, t) => sum + (t.montantDu || 0), 0);
+            
+            const dettes = transactions
+                .filter(t => t.type === 'depense' && t.montantDu > 0)
+                .reduce((sum, t) => sum + (t.montantDu || 0), 0);
+            
             // Calculer valeur du stock avec les prix définis par l'utilisateur
             const valeurStock = ((stocks.palme || 0) * (prixUnitaires.palme || 0)) + 
                                ((stocks.palmiste || 0) * (prixUnitaires.palmiste || 0));
@@ -1588,6 +2140,23 @@
             document.getElementById('total-revenus').textContent = formatMontant(revenus);
             document.getElementById('total-benefice').textContent = formatMontant(Math.abs(benefice));
             document.getElementById('valeur-stock').textContent = formatMontant(valeurStock);
+            
+            // Afficher créances et dettes
+            const creancesEl = document.getElementById('total-creances');
+            if (creancesEl) creancesEl.textContent = formatMontant(creances);
+            
+            const dettesEl = document.getElementById('total-dettes');
+            if (dettesEl) dettesEl.textContent = formatMontant(dettes);
+            
+            // Nombre de créances et dettes actives
+            const nbCreances = transactions.filter(t => t.type === 'revenu' && t.montantDu > 0).length;
+            const nbDettes = transactions.filter(t => t.type === 'depense' && t.montantDu > 0).length;
+            
+            const nbCreancesEl = document.getElementById('nb-creances');
+            if (nbCreancesEl) nbCreancesEl.textContent = nbCreances;
+            
+            const nbDettesEl = document.getElementById('nb-dettes');
+            if (nbDettesEl) nbDettesEl.textContent = nbDettes;
             
             document.getElementById('nb-transactions').textContent = transactions.filter(t => t.type !== 'stock').length;
             document.getElementById('nb-contacts').textContent = contacts.length;
@@ -1609,6 +2178,8 @@
                     beneficeLabel.textContent = 'Bénéfice Net';
                 }
             }
+            
+            updateTableauRecap();
         }
         
         function updateHistorique() {
@@ -1700,8 +2271,37 @@
             }
         }
         
+        // Vérification finale
+        window.addEventListener('load', () => {
+            console.log('✅ Vérification des fonctions...');
+            const fonctions = [
+                'showTab', 'updateStockForm', 'calculerValeurStock', 'ajouterLigne',
+                'updatePreview', 'enregistrerStock', 'enregistrerTransaction',
+                'supprimerTransaction', 'toggleContactForm', 'supprimerContact',
+                'ajouterContact', 'rechercherContacts', 'rechercherTransactions',
+                'filtrerTransactions', 'toggleMontantPaye',
+                'calculerMontantVente', 'voirDetailsContact', 'fermerDetailsContact',
+                'marquerPaye', 'afficherCreances', 'afficherDettes'
+            ];
+            
+            let toutesPresentes = true;
+            fonctions.forEach(f => {
+                if (typeof window[f] !== 'function') {
+                    console.error(`❌ Fonction manquante: ${f}`);
+                    toutesPresentes = false;
+                }
+            });
+            
+            if (toutesPresentes) {
+                console.log('✅ Toutes les fonctions sont disponibles');
+                console.log('✅ PalmManager v3.2 prêt à l\'emploi !');
+                console.log('📊 Système de créances/dettes actif');
+                console.log('💳 Gestion des paiements partiels disponible');
+            }
+        });
+        
         // Message de fin de chargement
-        console.log('PalmManager v2 - Script chargé avec succès');
+        console.log('PalmManager v3.2 - Script chargé avec succès - Système de créances/dettes actif');
     </script>
 </body>
 </html>
